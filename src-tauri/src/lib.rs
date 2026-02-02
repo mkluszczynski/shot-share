@@ -4,6 +4,9 @@ use std::path::PathBuf;
 use xcap::image::GenericImageView;
 use xcap::Monitor;
 
+mod settings;
+use settings::Settings;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -78,6 +81,16 @@ fn save_base64_image(base64_data: String, save_path: String) -> Result<String, S
     Ok(save_path)
 }
 
+#[tauri::command]
+fn get_settings() -> Result<Settings, String> {
+    Settings::load()
+}
+
+#[tauri::command]
+fn update_settings(settings: Settings) -> Result<(), String> {
+    settings.save()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -89,7 +102,9 @@ pub fn run() {
             greet,
             capture_screenshot,
             capture_full_screenshot,
-            save_base64_image
+            save_base64_image,
+            get_settings,
+            update_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

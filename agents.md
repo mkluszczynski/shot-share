@@ -15,7 +15,7 @@ pnpm tauri dev
 - [X] Create basic editor UI with canvas
 - [X] Add rectangle/square drawing tool
 - [X] Add text annotation tool
-- [ ] Implement settings storage (JSON file)
+- [X] Implement settings storage (JSON file)
 - [ ] Create settings UI panel
 - [ ] Add SFTP upload functionality
 - [ ] Integrate system tray with menu

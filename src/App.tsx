@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor";
+import type { Settings } from "./types/settings";
 import "./index.css"
 
 function App() {
   const [status, setStatus] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
   const [croppedImageDataUrl, setCroppedImageDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Initialize settings on app startup
+    invoke<Settings>("get_settings")
+      .then(settings => {
+        console.log("Settings loaded:", settings);
+      })
+      .catch(error => {
+        console.error("Failed to load settings:", error);
+      });
+  }, []);
 
   async function startScreenshot() {
     try {
