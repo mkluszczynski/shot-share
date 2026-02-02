@@ -4,6 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor";
+import { Settings as SettingsDialog } from "./components/Settings";
 import type { Settings } from "./types/settings";
 import "./index.css"
 
@@ -11,6 +12,7 @@ function App() {
   const [status, setStatus] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
   const [croppedImageDataUrl, setCroppedImageDataUrl] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     // Initialize settings on app startup
@@ -118,6 +120,12 @@ function App() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100">
+      <div className="absolute top-4 right-4">
+        <Button onClick={() => setIsSettingsOpen(true)} variant="outline">
+          Settings
+        </Button>
+      </div>
+
       <h1 className="text-2xl font-bold">Shot Share</h1>
       <Button onClick={startScreenshot}>Take Screenshot</Button>
       {status && <p className="text-sm">{status}</p>}
@@ -137,6 +145,11 @@ function App() {
           onCancel={handleEditorCancel}
         />
       )}
+
+      <SettingsDialog
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </main>
   );
 }

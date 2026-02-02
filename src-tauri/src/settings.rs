@@ -1,12 +1,17 @@
+use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+
+const KEYRING_SERVICE: &str = "shot-share";
+const KEYRING_USERNAME: &str = "sftp-password";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SftpConfig {
     pub host: String,
     pub port: u16,
     pub username: String,
+    #[serde(skip)] // Don't serialize password to JSON
     pub password: String,
     pub remote_path: String,
 }
@@ -45,6 +50,36 @@ impl Default for Settings {
 }
 
 impl Settings {
+    /// Get the keyring entry for SFTP password
+    fn get_keyring_entry() -> Result<Entry, String> {
+        Entry::new(KEYRING_SERVICE, KEYRING_USERNAME)
+            .map_err(|e| format!("Failed to access keyring: {}", e))
+    }
+
+    /// Get SFTP password from OS keyring
+    fn get_password_from_keyring() -> Result<String, String> {
+        let entry = Self::get_keyring_entry()?;
+        entry
+            .get_password()
+            .map_err(|e| format!("Failed to get password from keyring: {}", e))
+    }
+
+    /// Save SFTP password to OS keyring
+    fn save_password_to_keyring(password: &str) -> Result<(), String> {
+        let entry = Self::get_keyring_entry()?;
+        entry
+            .set_password(password)
+            .map_err(|e| format!("Failed to save password to keyring: {}", e))
+    }
+
+    /// Delete SFTP password from OS keyring
+    fn delete_password_from_keyring() -> Result<(), String> {
+        let entry = Self::get_keyring_entry()?;
+        entry
+            .delete_credential()
+            .map_err(|e| format!("Failed to delete password from keyring: {}", e))
+    }
+
     /// Get the path to the settings file
     fn settings_file_path() -> Result<PathBuf, String> {
         let config_dir =
@@ -75,8 +110,11 @@ impl Settings {
         let contents = fs::read_to_string(&settings_path)
             .map_err(|e| format!("Failed to read settings file: {}", e))?;
 
-        let settings: Settings = serde_json::from_str(&contents)
+        let mut settings: Settings = serde_json::from_str(&contents)
             .map_err(|e| format!("Failed to parse settings: {}", e))?;
+
+        // Load password from keyring
+        settings.sftp.password = Self::get_password_from_keyring().unwrap_or_default();
 
         Ok(settings)
     }
@@ -84,6 +122,14 @@ impl Settings {
     /// Save settings to file
     pub fn save(&self) -> Result<(), String> {
         let settings_path = Self::settings_file_path()?;
+
+        // Save password to keyring (only if not empty)
+        if !self.sftp.password.is_empty() {
+            Self::save_password_to_keyring(&self.sftp.password)?;
+        } else {
+            // If password is empty, delete it from keyring
+            let _ = Self::delete_password_from_keyring(); // Ignore errors if no password exists
+        }
 
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize settings: {}", e))?;
