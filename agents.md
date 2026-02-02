@@ -9,12 +9,12 @@ pnpm tauri dev
 
 ## TODO List
 
-- [ ] Set up required Tauri plugins (global-shortcut, fs, system-tray)
-- [ ] Implement region selection overlay UI
-- [ ] Implement screenshot capture functionality (partial/region)
-- [ ] Create basic editor UI with canvas
-- [ ] Add rectangle/square drawing tool
-- [ ] Add text annotation tool
+- [X] Set up required Tauri plugins (global-shortcut, fs, system-tray)
+- [X] Implement region selection overlay UI
+- [X] Implement screenshot capture functionality (partial/region)
+- [X] Create basic editor UI with canvas
+- [X] Add rectangle/square drawing tool
+- [X] Add text annotation tool
 - [ ] Implement settings storage (JSON file)
 - [ ] Create settings UI panel
 - [ ] Add SFTP upload functionality

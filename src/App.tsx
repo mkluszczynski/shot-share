@@ -3,11 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
+import { ImageEditor } from "./components/ImageEditor";
 import "./index.css"
 
 function App() {
   const [status, setStatus] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
+  const [croppedImageDataUrl, setCroppedImageDataUrl] = useState<string | null>(null);
 
   async function startScreenshot() {
     try {
@@ -36,21 +38,14 @@ function App() {
 
       setStatus("Cropping screenshot...");
 
-      const croppedBase64 = await cropImage(screenshotDataUrl, x, y, width, height);
+      const croppedDataUrl = await cropImage(screenshotDataUrl, x, y, width, height);
 
       setScreenshotDataUrl(null);
       const window = getCurrentWindow();
       await window.setFullscreen(false);
 
-      setStatus("Saving screenshot...");
-      const savePath = `/tmp/screenshot-${Date.now()}.png`;
-
-      const result = await invoke("save_base64_image", {
-        base64Data: croppedBase64,
-        savePath
-      });
-
-      setStatus(`Screenshot saved to: ${result}`);
+      setCroppedImageDataUrl(croppedDataUrl);
+      setStatus("");
     } catch (error) {
       setStatus(`Error: ${error}`);
     }
@@ -71,12 +66,35 @@ function App() {
         }
 
         ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
-        const croppedDataUrl = canvas.toDataURL('image/png');
-        resolve(croppedDataUrl.replace(/^data:image\/png;base64,/, ''));
+        resolve(canvas.toDataURL('image/png'));
       };
       img.onerror = () => reject('Failed to load image');
       img.src = dataUrl;
     });
+  }
+
+  async function handleEditorSave(editedImageDataUrl: string) {
+    try {
+      setCroppedImageDataUrl(null);
+      setStatus("Saving screenshot...");
+
+      const base64Data = editedImageDataUrl.replace(/^data:image\/png;base64,/, '');
+      const savePath = `/tmp/screenshot-${Date.now()}.png`;
+
+      const result = await invoke("save_base64_image", {
+        base64Data,
+        savePath
+      });
+
+      setStatus(`Screenshot saved to: ${result}`);
+    } catch (error) {
+      setStatus(`Error: ${error}`);
+    }
+  }
+
+  function handleEditorCancel() {
+    setCroppedImageDataUrl(null);
+    setStatus("Screenshot cancelled");
   }
 
   async function handleCancel() {
@@ -97,6 +115,14 @@ function App() {
           screenshotDataUrl={screenshotDataUrl}
           onRegionSelected={handleRegionSelected}
           onCancel={handleCancel}
+        />
+      )}
+
+      {croppedImageDataUrl && (
+        <ImageEditor
+          imageDataUrl={croppedImageDataUrl}
+          onSave={handleEditorSave}
+          onCancel={handleEditorCancel}
         />
       )}
     </main>
