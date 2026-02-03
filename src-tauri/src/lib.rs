@@ -196,16 +196,13 @@ fn register_shortcut(app: AppHandle, shortcut_str: String) -> Result<(), String>
         .parse::<Shortcut>()
         .map_err(|e| format!("Invalid shortcut format: {}", e))?;
 
+    // on_shortcut both registers the shortcut AND sets up the handler in one call
     app.global_shortcut()
         .on_shortcut(shortcut, move |app, _shortcut, event| {
             if event.state == ShortcutState::Pressed {
                 let _ = app.emit("show-region-selector", ());
             }
         })
-        .map_err(|e| format!("Failed to set shortcut handler: {}", e))?;
-
-    app.global_shortcut()
-        .register(shortcut)
         .map_err(|e| format!("Failed to register shortcut: {}", e))?;
 
     Ok(())

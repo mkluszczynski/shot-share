@@ -24,6 +24,11 @@ pnpm tauri dev
 - [ ] Test on Windows
 - [ ] Test on macOS
 
+## TODO Tickets
+
+- [X] Settings - Shortcut error
+- [] Upload - Session error
+
 ## Core Concepts
 
 ### Application Overview
