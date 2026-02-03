@@ -2,19 +2,20 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
-import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor/ImageEditor";
-import { Settings as SettingsDialog } from "./components/Settings";
+import { Sidebar, type NavigationItem } from "./components/Sidebar";
+import { HomePage } from "./components/HomePage";
+import { GeneralSettings } from "./components/GeneralSettings";
+import { SftpSettings } from "./components/SftpSettings";
 import { Toaster } from "sonner";
 import type { Settings } from "./types/settings";
 import "./index.css"
 
 function App() {
-  const [status, setStatus] = useState("");
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(null);
   const [croppedImageDataUrl, setCroppedImageDataUrl] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<NavigationItem>("home");
 
   useEffect(() => {
     // Initialize settings on app startup
@@ -28,7 +29,7 @@ function App() {
 
     // Listen for tray events to open settings
     const unlistenSettings = listen("open-settings", () => {
-      setIsSettingsOpen(true);
+      setCurrentView("general");
     });
 
     // Listen for global shortcut to show region selector
@@ -41,7 +42,6 @@ function App() {
       // Reset all editor states when window is closed via system X
       setCroppedImageDataUrl(null);
       setScreenshotDataUrl(null);
-      setStatus("");
     });
 
     return () => {
@@ -53,7 +53,6 @@ function App() {
 
   async function startScreenshot() {
     try {
-      setStatus("Preparing...");
       const window = getCurrentWindow();
 
       await window.hide();
@@ -65,9 +64,8 @@ function App() {
       await window.setFullscreen(true);
       await window.show();
       await window.setFocus();
-      setStatus("");
     } catch (error) {
-      setStatus(`Error: ${error}`);
+      console.error("Screenshot error:", error);
       const window = getCurrentWindow();
       await window.show();
     }
@@ -77,8 +75,6 @@ function App() {
     try {
       if (!screenshotDataUrl) return;
 
-      setStatus("Cropping screenshot...");
-
       const croppedDataUrl = await cropImage(screenshotDataUrl, x, y, width, height);
 
       setScreenshotDataUrl(null);
@@ -86,9 +82,8 @@ function App() {
       await window.setFullscreen(false);
 
       setCroppedImageDataUrl(croppedDataUrl);
-      setStatus("");
     } catch (error) {
-      setStatus(`Error: ${error}`);
+      console.error("Crop error:", error);
     }
   }
 
@@ -117,62 +112,48 @@ function App() {
   async function handleEditorSave(editedImageDataUrl: string) {
     try {
       setCroppedImageDataUrl(null);
-      setStatus("Saving screenshot...");
 
       const base64Data = editedImageDataUrl.replace(/^data:image\/png;base64,/, '');
       const savePath = `/tmp/screenshot-${Date.now()}.png`;
 
-      const result = await invoke("save_base64_image", {
+      await invoke("save_base64_image", {
         base64Data,
         savePath
       });
-
-      setStatus(`Screenshot saved to: ${result}`);
     } catch (error) {
-      setStatus(`Error: ${error}`);
+      console.error("Save error:", error);
     }
   }
 
   async function handleEditorCancel() {
     const window = getCurrentWindow();
     await window.hide();
-    // Clear state after hiding to prevent flash
     setCroppedImageDataUrl(null);
-    setStatus("");
   }
 
   async function handleCancel() {
     const window = getCurrentWindow();
     await window.setFullscreen(false);
     await window.hide();
-    // Clear state after hiding to prevent flash
     setScreenshotDataUrl(null);
-    setStatus("");
   }
 
-  async function hideToTray() {
-    try {
-      await invoke("hide_main_window");
-    } catch (error) {
-      console.error("Failed to hide window:", error);
+  function renderMainContent() {
+    switch (currentView) {
+      case "home":
+        return <HomePage onTakeScreenshot={startScreenshot} />;
+      case "general":
+        return <GeneralSettings />;
+      case "sftp":
+        return <SftpSettings />;
+      default:
+        return <HomePage onTakeScreenshot={startScreenshot} />;
     }
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100">
-      <div className="absolute top-4 right-4 flex gap-2">
-        <Button onClick={hideToTray} variant="outline">
-          Hide to Tray
-        </Button>
-        <Button onClick={() => setIsSettingsOpen(true)} variant="outline">
-          Settings
-        </Button>
-      </div>
-
-      <h1 className="text-2xl font-bold">Shot Share</h1>
-      <Button onClick={startScreenshot}>Take Screenshot</Button>
-      {status && <p className="text-sm">{status}</p>}
-
+    <>
+      {/* Screenshot capture and editor overlays */}
       {screenshotDataUrl && (
         <RegionSelector
           screenshotDataUrl={screenshotDataUrl}
@@ -189,13 +170,14 @@ function App() {
         />
       )}
 
-      <SettingsDialog
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {/* Main application UI */}
+      <div className="flex h-screen bg-gray-100">
+        <Sidebar currentView={currentView} onNavigate={setCurrentView} />
+        {renderMainContent()}
+      </div>
 
       <Toaster position="bottom-right" richColors closeButton />
-    </main>
+    </>
   );
 }
 
