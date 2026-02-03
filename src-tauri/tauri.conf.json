@@ -14,11 +14,19 @@
       {
         "title": "shot-share",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "visible": false,
+        "skipTaskbar": true
       }
     ],
     "security": {
       "csp": null
+    },
+    "trayIcon": {
+      "id": "main-tray",
+      "iconPath": "icons/icon.png",
+      "menuOnLeftClick": false,
+      "iconAsTemplate": true
     }
   },
   "bundle": {

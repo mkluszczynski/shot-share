@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor";
@@ -24,6 +25,15 @@ function App() {
       .catch(error => {
         console.error("Failed to load settings:", error);
       });
+
+    // Listen for tray events to open settings
+    const unlisten = listen("open-settings", () => {
+      setIsSettingsOpen(true);
+    });
+
+    return () => {
+      unlisten.then(fn => fn());
+    };
   }, []);
 
   async function startScreenshot() {
@@ -119,9 +129,20 @@ function App() {
     setStatus("Screenshot cancelled");
   }
 
+  async function hideToTray() {
+    try {
+      await invoke("hide_main_window");
+    } catch (error) {
+      console.error("Failed to hide window:", error);
+    }
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Button onClick={hideToTray} variant="outline">
+          Hide to Tray
+        </Button>
         <Button onClick={() => setIsSettingsOpen(true)} variant="outline">
           Settings
         </Button>
