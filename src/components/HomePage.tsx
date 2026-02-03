@@ -1,4 +1,4 @@
-import { Keyboard, Image, Upload, Settings, Zap, Target, Sparkles } from "lucide-react";
+import { Keyboard, Image, Upload, Zap, Target, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { invoke } from "@tauri-apps/api/core";
 

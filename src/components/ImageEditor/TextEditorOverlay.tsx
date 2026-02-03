@@ -1,4 +1,4 @@
-import type { TextEditingState } from "../types/editor";
+import { TextEditingState } from "@/types/editor";
 
 interface TextEditorOverlayProps {
     editingText: TextEditingState;
