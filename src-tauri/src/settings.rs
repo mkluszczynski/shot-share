@@ -77,34 +77,6 @@ impl Settings {
             .map_err(|e| format!("Failed to access keyring: {}", e))
     }
 
-    /// Get SFTP password from OS keyring
-    pub fn get_password_from_keyring() -> Result<String, String> {
-        println!("[get_password_from_keyring] Starting password retrieval");
-        let entry = Self::get_keyring_entry()?;
-        match entry.get_password() {
-            Ok(password) => {
-                println!(
-                    "[get_password_from_keyring] Password retrieved successfully (length: {})",
-                    password.len()
-                );
-                Ok(password)
-            }
-            Err(keyring::Error::NoEntry) => {
-                println!(
-                    "[get_password_from_keyring] No password found in keyring (NoEntry error)"
-                );
-                Ok(String::new()) // Return empty string if no password is stored yet
-            }
-            Err(e) => {
-                eprintln!(
-                    "[get_password_from_keyring] Failed to get password from keyring: {:?}",
-                    e
-                );
-                Err(format!("Failed to get password from keyring: {}", e))
-            }
-        }
-    }
-
     /// Save SFTP password to OS keyring
     fn save_password_to_keyring(password: &str) -> Result<(), String> {
         println!(
