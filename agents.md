@@ -7,7 +7,7 @@
 pnpm tauri dev
 ```
 
-## TODO List
+## TODO MVP List
 
 - [X] Set up required Tauri plugins (global-shortcut, fs, system-tray)
 - [X] Implement region selection overlay UI
@@ -28,6 +28,11 @@ pnpm tauri dev
 
 - [X] Settings - Shortcut error
 - [X] Upload - Session error
+- [] Editor - Add arrow to image editor.
+- [] Editor - Add stepper to image editor. (On every click add new number to image)
+- [] Editor - Add blur to image editor.
+- [] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
+- [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
 
 ## Core Concepts
 
