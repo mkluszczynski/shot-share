@@ -27,12 +27,18 @@ function App() {
       });
 
     // Listen for tray events to open settings
-    const unlisten = listen("open-settings", () => {
+    const unlistenSettings = listen("open-settings", () => {
       setIsSettingsOpen(true);
     });
 
+    // Listen for global shortcut to show region selector
+    const unlistenShortcut = listen("show-region-selector", () => {
+      startScreenshot();
+    });
+
     return () => {
-      unlisten.then(fn => fn());
+      unlistenSettings.then(fn => fn());
+      unlistenShortcut.then(fn => fn());
     };
   }, []);
 

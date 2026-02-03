@@ -142,6 +142,18 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             };
 
             await invoke("update_settings", { settings: updatedSettings });
+
+            // Register the new keyboard shortcut
+            try {
+                await invoke("register_shortcut", { shortcutStr: screenshotShortcut });
+            } catch (error) {
+                console.error("Failed to register shortcut:", error);
+                toast.error("Failed to register keyboard shortcut", {
+                    description: String(error)
+                });
+                return;
+            }
+
             toast.success("Settings saved successfully");
             onClose();
         } catch (error) {

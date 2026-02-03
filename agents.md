@@ -19,7 +19,7 @@ pnpm tauri dev
 - [X] Create settings UI panel
 - [X] Add SFTP upload functionality
 - [X] Integrate system tray with menu
-- [ ] Add keyboard shortcut registration
+- [X] Add keyboard shortcut registration
 - [ ] Test on Linux
 - [ ] Test on Windows
 - [ ] Test on macOS

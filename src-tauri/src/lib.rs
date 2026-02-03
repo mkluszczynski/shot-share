@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use xcap::image::GenericImageView;
 use xcap::Monitor;
 
@@ -148,6 +149,68 @@ fn hide_main_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+fn setup_global_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let settings = Settings::load()?;
+    let shortcut_str = settings.screenshot_shortcut;
+
+    // Parse the shortcut string (e.g., "CommandOrControl+Shift+S")
+    if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {
+        // First unregister if it exists (handles hot-reload scenarios)
+        let _ = app.global_shortcut().unregister(shortcut);
+
+        // Register the shortcut with event handler
+        // Note: on_shortcut both registers the shortcut AND sets up the handler
+        match app
+            .global_shortcut()
+            .on_shortcut(shortcut, move |app, _shortcut, event| {
+                if event.state == ShortcutState::Pressed {
+                    // Emit event to show region selector
+                    let _ = app.emit("show-region-selector", ());
+                }
+            }) {
+            Ok(_) => {
+                println!("Successfully registered shortcut: {}", shortcut_str);
+            }
+            Err(e) => {
+                // Log but don't fail - shortcut might already be registered from previous run
+                eprintln!(
+                    "Warning: Could not register shortcut: {}. This is normal during development.",
+                    e
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn register_shortcut(app: AppHandle, shortcut_str: String) -> Result<(), String> {
+    // Unregister all existing shortcuts first
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
+
+    // Parse and register the new shortcut
+    let shortcut = shortcut_str
+        .parse::<Shortcut>()
+        .map_err(|e| format!("Invalid shortcut format: {}", e))?;
+
+    app.global_shortcut()
+        .on_shortcut(shortcut, move |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                let _ = app.emit("show-region-selector", ());
+            }
+        })
+        .map_err(|e| format!("Failed to set shortcut handler: {}", e))?;
+
+    app.global_shortcut()
+        .register(shortcut)
+        .map_err(|e| format!("Failed to register shortcut: {}", e))?;
+
+    Ok(())
+}
+
 fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
@@ -215,6 +278,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             setup_tray(app.handle())?;
+            setup_global_shortcuts(app.handle())?;
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -234,7 +298,8 @@ pub fn run() {
             update_settings,
             upload_to_sftp,
             show_main_window,
-            hide_main_window
+            hide_main_window,
+            register_shortcut
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
