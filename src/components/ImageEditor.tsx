@@ -289,7 +289,11 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
 
             toast.info("Loading settings...");
             const settings = await invoke<Settings>("get_settings");
-            const sftpPassword = await invoke<string>("get_sftp_password");
+
+            // Validate SFTP configuration (check for truly empty/whitespace-only values)
+            if (!settings.sftp.host?.trim() || !settings.sftp.username?.trim()) {
+                throw new Error("SFTP not configured. Please configure SFTP settings in Settings.");
+            }
 
             // Generate filename with timestamp
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -312,7 +316,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 host: settings.sftp.host,
                 port: settings.sftp.port,
                 username: settings.sftp.username,
-                password: sftpPassword,
+                password: settings.sftp.password,
+                useSshKey: settings.sftp.use_ssh_key,
                 remotePath: settings.sftp.remote_path,
             });
 

@@ -11,8 +11,10 @@ pub struct SftpConfig {
     pub host: String,
     pub port: u16,
     pub username: String,
-    #[serde(skip)] // Don't serialize password to JSON
+    #[serde(default)]
     pub password: String,
+    #[serde(default)]
+    pub use_ssh_key: bool, // If true, use SSH agent authentication instead of password
     pub remote_path: String,
     #[serde(default = "default_base_url")]
     pub base_url: String,
@@ -35,6 +37,7 @@ impl Default for SftpConfig {
             port: 22,
             username: String::new(),
             password: String::new(),
+            use_ssh_key: false,
             remote_path: String::from("/uploads"),
             base_url: String::from("https://example.com"),
             copy_to_clipboard: true,
@@ -66,24 +69,68 @@ impl Default for Settings {
 impl Settings {
     /// Get the keyring entry for SFTP password
     fn get_keyring_entry() -> Result<Entry, String> {
+        println!(
+            "Getting keyring entry: service='{}', username='{}'",
+            KEYRING_SERVICE, KEYRING_USERNAME
+        );
         Entry::new(KEYRING_SERVICE, KEYRING_USERNAME)
             .map_err(|e| format!("Failed to access keyring: {}", e))
     }
 
     /// Get SFTP password from OS keyring
-    fn get_password_from_keyring() -> Result<String, String> {
+    pub fn get_password_from_keyring() -> Result<String, String> {
+        println!("[get_password_from_keyring] Starting password retrieval");
         let entry = Self::get_keyring_entry()?;
-        entry
-            .get_password()
-            .map_err(|e| format!("Failed to get password from keyring: {}", e))
+        match entry.get_password() {
+            Ok(password) => {
+                println!(
+                    "[get_password_from_keyring] Password retrieved successfully (length: {})",
+                    password.len()
+                );
+                Ok(password)
+            }
+            Err(keyring::Error::NoEntry) => {
+                println!(
+                    "[get_password_from_keyring] No password found in keyring (NoEntry error)"
+                );
+                Ok(String::new()) // Return empty string if no password is stored yet
+            }
+            Err(e) => {
+                eprintln!(
+                    "[get_password_from_keyring] Failed to get password from keyring: {:?}",
+                    e
+                );
+                Err(format!("Failed to get password from keyring: {}", e))
+            }
+        }
     }
 
     /// Save SFTP password to OS keyring
     fn save_password_to_keyring(password: &str) -> Result<(), String> {
+        println!(
+            "[save_password_to_keyring] Starting password save (length: {})",
+            password.len()
+        );
         let entry = Self::get_keyring_entry()?;
         entry
             .set_password(password)
-            .map_err(|e| format!("Failed to save password to keyring: {}", e))
+            .map_err(|e| format!("Failed to save password to keyring: {}", e))?;
+        println!("[save_password_to_keyring] Password saved successfully");
+
+        // Immediately verify it was saved
+        match entry.get_password() {
+            Ok(retrieved) => {
+                println!(
+                    "[save_password_to_keyring] Verification: password retrieved (length: {})",
+                    retrieved.len()
+                );
+            }
+            Err(e) => {
+                eprintln!("[save_password_to_keyring] Verification failed: {:?}", e);
+            }
+        }
+
+        Ok(())
     }
 
     /// Delete SFTP password from OS keyring
@@ -124,11 +171,8 @@ impl Settings {
         let contents = fs::read_to_string(&settings_path)
             .map_err(|e| format!("Failed to read settings file: {}", e))?;
 
-        let mut settings: Settings = serde_json::from_str(&contents)
+        let settings: Settings = serde_json::from_str(&contents)
             .map_err(|e| format!("Failed to parse settings: {}", e))?;
-
-        // Load password from keyring
-        settings.sftp.password = Self::get_password_from_keyring().unwrap_or_default();
 
         Ok(settings)
     }
@@ -139,8 +183,13 @@ impl Settings {
 
         // Save password to keyring (only if not empty)
         if !self.sftp.password.is_empty() {
+            println!(
+                "Saving password to keyring (length: {})",
+                self.sftp.password.len()
+            );
             Self::save_password_to_keyring(&self.sftp.password)?;
         } else {
+            println!("Password is empty, deleting from keyring");
             // If password is empty, delete it from keyring
             let _ = Self::delete_password_from_keyring(); // Ignore errors if no password exists
         }

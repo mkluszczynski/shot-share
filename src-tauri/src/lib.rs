@@ -94,14 +94,53 @@ fn get_settings() -> Result<Settings, String> {
 }
 
 #[tauri::command]
-fn get_sftp_password() -> Result<String, String> {
-    let settings = Settings::load()?;
-    Ok(settings.sftp.password)
+fn test_sftp_connection(
+    host: String,
+    port: u16,
+    username: String,
+    password: String,
+    use_ssh_key: bool,
+) -> Result<String, String> {
+    let password_opt = if use_ssh_key {
+        None // Use SSH agent authentication
+    } else if password.is_empty() {
+        None
+    } else {
+        Some(password)
+    };
+
+    let uploader = SftpUploader::new(
+        host.clone(),
+        port,
+        username.clone(),
+        password_opt,
+        String::new(), // remote_path not needed for test
+    )
+    .map_err(|e| e.to_string())?;
+
+    uploader.test_connection().map_err(|e| e.to_string())?;
+
+    let auth_method = if use_ssh_key { "SSH key" } else { "password" };
+    Ok(format!(
+        "Successfully connected to {}@{}:{} using {}",
+        username, host, port, auth_method
+    ))
 }
 
 #[tauri::command]
-fn update_settings(settings: Settings) -> Result<(), String> {
-    settings.save()
+fn update_settings(settings: Settings, password: Option<String>) -> Result<(), String> {
+    let mut settings_to_save = settings;
+
+    // Handle password update - if password param provided and not empty, use it
+    if let Some(new_password) = password {
+        if !new_password.is_empty() {
+            println!("New password provided (length: {})", new_password.len());
+            settings_to_save.sftp.password = new_password;
+        }
+        // If empty, keep whatever is in settings (could be existing password)
+    }
+
+    settings_to_save.save()
 }
 
 #[tauri::command]
@@ -112,14 +151,34 @@ fn upload_to_sftp(
     port: u16,
     username: String,
     password: String,
+    use_ssh_key: bool,
     remote_path: String,
 ) -> Result<String, String> {
-    let password_opt = if password.is_empty() {
-        None
-    } else {
-        Some(password)
-    };
+    // Validate configuration before attempting connection
+    println!(
+        "Upload SFTP - host: '{}', username: '{}', password length: {}",
+        host,
+        username,
+        password.len()
+    );
 
+    if host.trim().is_empty() {
+        return Err(
+            "SFTP host is not configured. Please configure SFTP settings first.".to_string(),
+        );
+    }
+    if username.trim().is_empty() {
+        return Err(
+            "SFTP username is not configured. Please configure SFTP settings first.".to_string(),
+        );
+    }
+    if !use_ssh_key && password.trim().is_empty() {
+        return Err(
+            "SFTP password is not configured. Please configure SFTP settings first.".to_string(),
+        );
+    }
+
+    let password_opt = if use_ssh_key { None } else { Some(password) };
     let uploader = SftpUploader::new(host, port, username, password_opt, remote_path)
         .map_err(|e| e.to_string())?;
 
@@ -291,8 +350,8 @@ pub fn run() {
             capture_full_screenshot,
             save_base64_image,
             get_settings,
-            get_sftp_password,
             update_settings,
+            test_sftp_connection,
             upload_to_sftp,
             show_main_window,
             hide_main_window,

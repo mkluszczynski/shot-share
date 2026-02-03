@@ -28,11 +28,14 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     const [sftpPort, setSftpPort] = useState(22);
     const [sftpUsername, setSftpUsername] = useState("");
     const [sftpPassword, setSftpPassword] = useState("");
+    const [useSshKey, setUseSshKey] = useState(false);
     const [sftpRemotePath, setSftpRemotePath] = useState("");
     const [sftpBaseUrl, setSftpBaseUrl] = useState("");
     const [copyToClipboard, setCopyToClipboard] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isTestingConnection, setIsTestingConnection] = useState(false);
     const [isCapturingShortcut, setIsCapturingShortcut] = useState(false);
+    const [hasExistingPassword, setHasExistingPassword] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -43,13 +46,16 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     async function loadSettings() {
         try {
             const loadedSettings = await invoke<SettingsType>("get_settings");
+
             setSettings(loadedSettings);
             setSaveDirectory(loadedSettings.save_directory);
             setScreenshotShortcut(loadedSettings.screenshot_shortcut);
             setSftpHost(loadedSettings.sftp.host);
             setSftpPort(loadedSettings.sftp.port);
             setSftpUsername(loadedSettings.sftp.username);
-            setSftpPassword(loadedSettings.sftp.password);
+            setSftpPassword(""); // Always clear password field for security
+            setUseSshKey(loadedSettings.sftp.use_ssh_key || false);
+            setHasExistingPassword(loadedSettings.sftp.password.length > 0);
             setSftpRemotePath(loadedSettings.sftp.remote_path);
             setSftpBaseUrl(loadedSettings.sftp.base_url);
             setCopyToClipboard(loadedSettings.sftp.copy_to_clipboard);
@@ -122,6 +128,29 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         setIsCapturingShortcut(false);
     }
 
+    async function handleTestConnection() {
+        setIsTestingConnection(true);
+        try {
+            const result = await invoke<string>("test_sftp_connection", {
+                host: sftpHost,
+                port: sftpPort,
+                username: sftpUsername,
+                password: sftpPassword,
+                useSshKey: useSshKey,
+            });
+            toast.success("Connection successful!", {
+                description: result,
+            });
+        } catch (error) {
+            console.error("Connection test failed:", error);
+            toast.error("Connection failed", {
+                description: String(error),
+            });
+        } finally {
+            setIsTestingConnection(false);
+        }
+    }
+
     async function handleSave() {
         if (!settings) return;
 
@@ -134,14 +163,19 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     host: sftpHost,
                     port: sftpPort,
                     username: sftpUsername,
-                    password: sftpPassword,
+                    password: "", // Don't include password in settings object
+                    use_ssh_key: useSshKey,
                     remote_path: sftpRemotePath,
                     base_url: sftpBaseUrl,
                     copy_to_clipboard: copyToClipboard,
                 },
             };
 
-            await invoke("update_settings", { settings: updatedSettings });
+            // Pass password separately
+            await invoke("update_settings", {
+                settings: updatedSettings,
+                password: sftpPassword || null
+            });
 
             // Register the new keyboard shortcut
             try {
@@ -254,16 +288,36 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="sftpPassword">Password</Label>
-                            <Input
-                                id="sftpPassword"
-                                type="password"
-                                value={sftpPassword}
-                                onChange={(e) => setSftpPassword(e.target.value)}
-                                placeholder="password"
+                        <div className="flex items-center space-x-2">
+                            <input
+                                id="useSshKey"
+                                type="checkbox"
+                                checked={useSshKey}
+                                onChange={(e) => setUseSshKey(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300"
                             />
+                            <Label htmlFor="useSshKey" className="cursor-pointer">
+                                Use SSH key authentication (instead of password)
+                            </Label>
                         </div>
+
+                        {!useSshKey && (
+                            <div className="space-y-2">
+                                <Label htmlFor="sftpPassword">Password</Label>
+                                <Input
+                                    id="sftpPassword"
+                                    type="password"
+                                    value={sftpPassword}
+                                    onChange={(e) => setSftpPassword(e.target.value)}
+                                    placeholder={hasExistingPassword ? "(password saved - leave blank to keep)" : "password"}
+                                />
+                                {hasExistingPassword && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Leave blank to keep existing password
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <Label htmlFor="sftpRemotePath">Remote Path</Label>
@@ -299,6 +353,21 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                             <Label htmlFor="copyToClipboard" className="cursor-pointer">
                                 Copy link to clipboard after upload
                             </Label>
+                        </div>
+
+                        <div className="pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleTestConnection}
+                                disabled={isTestingConnection || !sftpHost || !sftpUsername}
+                                className="w-full"
+                            >
+                                {isTestingConnection ? "Testing..." : "Test Connection"}
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Test your SFTP credentials before saving
+                            </p>
                         </div>
                     </div>
                 </div>

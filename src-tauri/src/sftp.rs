@@ -1,8 +1,9 @@
 use ssh2::Session;
 use std::fs::File;
 use std::io::Read;
-use std::net::TcpStream;
+use std::net::{TcpStream, ToSocketAddrs};
 use std::path::Path;
+use std::time::Duration;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SftpError {
@@ -52,44 +53,125 @@ impl SftpUploader {
         })
     }
 
-    pub fn upload_file(
-        &self,
-        local_file_path: &str,
-        remote_filename: &str,
-    ) -> Result<String, SftpError> {
-        // Connect to the SSH server
-        let tcp = TcpStream::connect(format!("{}:{}", self.host, self.port))
-            .map_err(|e| SftpError::ConnectionFailed(e.to_string()))?;
+    /// Test connection to the SFTP server
+    pub fn test_connection(&self) -> Result<(), SftpError> {
+        let addr = format!("{}:{}", self.host, self.port);
+        let tcp = TcpStream::connect_timeout(
+            &addr
+                .to_socket_addrs()
+                .map_err(|e| {
+                    SftpError::ConnectionFailed(format!("Invalid host/port '{}': {}", addr, e))
+                })?
+                .next()
+                .ok_or_else(|| {
+                    SftpError::ConnectionFailed(format!("Could not resolve host: {}", self.host))
+                })?,
+            Duration::from_secs(10),
+        )
+        .map_err(|e| {
+            SftpError::ConnectionFailed(format!(
+                "Cannot reach {}:{}. Check host and port. Error: {}",
+                self.host, self.port, e
+            ))
+        })?;
 
         let mut session = Session::new().map_err(|e| SftpError::ConnectionFailed(e.to_string()))?;
-
         session.set_tcp_stream(tcp);
+        session.set_timeout(10000); // 10 second timeout
         session
             .handshake()
-            .map_err(|e| SftpError::ConnectionFailed(e.to_string()))?;
+            .map_err(|e| SftpError::ConnectionFailed(format!("SSH handshake failed: {}", e)))?;
 
         // Authenticate
         if let Some(ref password) = self.password {
             session
                 .userauth_password(&self.username, password)
-                .map_err(|e| SftpError::AuthenticationFailed(e.to_string()))?;
+                .map_err(|e| {
+                    SftpError::AuthenticationFailed(format!(
+                        "Password authentication failed for user '{}': {}",
+                        self.username, e
+                    ))
+                })?;
         } else {
-            // Try agent authentication
-            session
-                .userauth_agent(&self.username)
-                .map_err(|e| SftpError::AuthenticationFailed(e.to_string()))?;
+            session.userauth_agent(&self.username).map_err(|e| {
+                SftpError::AuthenticationFailed(format!(
+                    "SSH agent authentication failed for user '{}': {}",
+                    self.username, e
+                ))
+            })?;
         }
 
         if !session.authenticated() {
             return Err(SftpError::AuthenticationFailed(
-                "Failed to authenticate".to_string(),
+                "Authentication failed - check username and password".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    pub fn upload_file(
+        &self,
+        local_file_path: &str,
+        remote_filename: &str,
+    ) -> Result<String, SftpError> {
+        // Connect to the SSH server with timeout
+        let addr = format!("{}:{}", self.host, self.port);
+        let tcp = TcpStream::connect_timeout(
+            &addr
+                .to_socket_addrs()
+                .map_err(|e| {
+                    SftpError::ConnectionFailed(format!("Invalid host/port '{}': {}", addr, e))
+                })?
+                .next()
+                .ok_or_else(|| {
+                    SftpError::ConnectionFailed(format!("Could not resolve host: {}", self.host))
+                })?,
+            Duration::from_secs(10),
+        )
+        .map_err(|e| {
+            SftpError::ConnectionFailed(format!(
+                "Cannot reach {}:{}. Check host and port. Error: {}",
+                self.host, self.port, e
+            ))
+        })?;
+
+        let mut session = Session::new().map_err(|e| SftpError::ConnectionFailed(e.to_string()))?;
+        session.set_tcp_stream(tcp);
+        session.set_timeout(30000); // 30 second timeout for upload
+        session
+            .handshake()
+            .map_err(|e| SftpError::ConnectionFailed(format!("SSH handshake failed: {}", e)))?;
+
+        // Authenticate
+        if let Some(ref password) = self.password {
+            session
+                .userauth_password(&self.username, password)
+                .map_err(|e| {
+                    SftpError::AuthenticationFailed(format!(
+                        "Password authentication failed for user '{}': {}",
+                        self.username, e
+                    ))
+                })?;
+        } else {
+            session.userauth_agent(&self.username).map_err(|e| {
+                SftpError::AuthenticationFailed(format!(
+                    "SSH agent authentication failed for user '{}': {}",
+                    self.username, e
+                ))
+            })?;
+        }
+
+        if !session.authenticated() {
+            return Err(SftpError::AuthenticationFailed(
+                "Authentication failed - check username and password".to_string(),
             ));
         }
 
         // Open SFTP session
         let sftp = session
             .sftp()
-            .map_err(|e| SftpError::UploadFailed(e.to_string()))?;
+            .map_err(|e| SftpError::UploadFailed(format!("Failed to start SFTP session: {}", e)))?;
 
         // Read the local file
         let local_path = Path::new(local_file_path);

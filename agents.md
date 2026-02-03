@@ -27,7 +27,7 @@ pnpm tauri dev
 ## TODO Tickets
 
 - [X] Settings - Shortcut error
-- [] Upload - Session error
+- [X] Upload - Session error
 
 ## Core Concepts
 
