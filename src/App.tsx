@@ -36,9 +36,18 @@ function App() {
       startScreenshot();
     });
 
+    // Listen for window close events to clean up state
+    const unlistenClose = listen("window-close-requested", () => {
+      // Reset all editor states when window is closed via system X
+      setCroppedImageDataUrl(null);
+      setScreenshotDataUrl(null);
+      setStatus("");
+    });
+
     return () => {
       unlistenSettings.then(fn => fn());
       unlistenShortcut.then(fn => fn());
+      unlistenClose.then(fn => fn());
     };
   }, []);
 

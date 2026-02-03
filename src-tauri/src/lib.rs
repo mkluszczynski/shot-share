@@ -339,6 +339,8 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // Emit event to frontend to clean up state before hiding
+                let _ = window.emit("window-close-requested", ());
                 // Prevent the window from closing and hide it instead
                 window.hide().unwrap();
                 api.prevent_close();

@@ -35,6 +35,10 @@ pnpm tauri dev
 - [] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
 - [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
 
+## TODO Bug fixes
+
+- [X] #001 Closing image editor by clicking system X casing editor to open on next screenshot trigger.
+
 ## Core Concepts
 
 ### Application Overview
