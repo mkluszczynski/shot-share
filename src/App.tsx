@@ -91,6 +91,22 @@ function App() {
       const window = getCurrentWindow();
       await window.setFullscreen(false);
 
+      // Add padding to the window size (toolbar height + bottom padding)
+      const TOOLBAR_HEIGHT = 60; // Height of the editor toolbar
+      const PADDING = 100; // Extra padding around the image
+      const newWidth = width + PADDING;
+      const newHeight = height + TOOLBAR_HEIGHT + PADDING;
+
+      // Set window size to accommodate the image with padding
+      await window.setSize({
+        width: newWidth,
+        height: newHeight,
+        type: 'Physical'
+      });
+
+      // Center the window on screen
+      await window.center();
+
       setCroppedImageDataUrl(croppedDataUrl);
     } catch (error) {
       console.error("Crop error:", error);
@@ -180,11 +196,13 @@ function App() {
         />
       )}
 
-      {/* Main application UI */}
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar currentView={currentView} onNavigate={setCurrentView} />
-        {renderMainContent()}
-      </div>
+      {/* Main application UI - hidden when in screenshot/editor mode */}
+      {!screenshotDataUrl && !croppedImageDataUrl && (
+        <div className="flex h-screen bg-gray-100">
+          <Sidebar currentView={currentView} onNavigate={setCurrentView} />
+          {renderMainContent()}
+        </div>
+      )}
 
       <Toaster position="bottom-right" richColors closeButton />
     </>
