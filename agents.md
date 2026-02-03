@@ -31,7 +31,7 @@ pnpm tauri dev
 - [X] Editor - Add arrow to image editor.
 - [X] Editor - Add stepper to image editor. (On every click add new number to image)
 - [X] Editor - Add blur to image editor.
-- [] Editor - Undo/redu (Ctrl+Z)
+- [X] Editor - Undo/redo (Ctrl+Z)
 - [] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
 - [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
 

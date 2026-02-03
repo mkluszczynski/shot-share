@@ -6,6 +6,7 @@ import { useDrawing } from "../../hooks/useDrawing";
 import { useTextEditing } from "../../hooks/useTextEditing";
 import { useShapeSelection } from "../../hooks/useShapeSelection";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useHistory } from "../../hooks/useHistory";
 import { uploadImageToSftp } from "../../services/uploadService";
 import { EditorToolbar } from "./EditorToolbar";
 import { ShapeRenderer } from "./ShapeRenderer";
@@ -23,9 +24,11 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
 
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [tool, setTool] = useState<Tool>("select");
-    const [shapes, setShapes] = useState<ShapeType[]>([]);
     const [color, setColor] = useState("#ef4444");
     const [uploading, setUploading] = useState(false);
+
+    // History management for undo/redo
+    const { shapes, setShapes, undo, redo, canUndo, canRedo } = useHistory([]);
 
     // Load image
     useEffect(() => {
@@ -36,15 +39,15 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
 
     // Shape management
     const addShape = (shape: ShapeType) => {
-        setShapes(prev => [...prev, shape]);
+        setShapes([...shapes, shape]);
     };
 
     const updateShape = (id: string, updates: Partial<ShapeType>) => {
-        setShapes(prev => prev.map(s => s.id === id ? { ...s, ...updates } as ShapeType : s));
+        setShapes(shapes.map(s => s.id === id ? { ...s, ...updates } as ShapeType : s));
     };
 
     const deleteShape = (id: string) => {
-        setShapes(prev => prev.filter(s => s.id !== id));
+        setShapes(shapes.filter(s => s.id !== id));
     };
 
     // Custom hooks
@@ -84,6 +87,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             setTool("select");
             clearSelection();
         },
+        onUndo: undo,
+        onRedo: redo,
     });
 
     const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -146,7 +151,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         const deltaX = node.x();
         const deltaY = node.y();
 
-        setShapes(prev => prev.map(shape => {
+        const updatedShapes = shapes.map(shape => {
             if (shape.id !== id) return shape;
 
             if (shape.type === "arrow") {
@@ -160,7 +165,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             } else {
                 return { ...shape, x: deltaX, y: deltaY };
             }
-        }));
+        });
+        setShapes(updatedShapes);
 
         node.position({ x: 0, y: 0 });
     };
@@ -175,7 +181,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         node.scaleY(1);
         node.position({ x: 0, y: 0 });
 
-        setShapes(prev => prev.map(shape => {
+        const updatedShapes = shapes.map(shape => {
             if (shape.id !== id) return shape;
 
             if (shape.type === "rect") {
@@ -210,7 +216,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 };
             }
             return shape;
-        }));
+        });
+        setShapes(updatedShapes);
     };
 
     const handleUpload = async () => {
@@ -251,11 +258,15 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 color={color}
                 selectedId={selectedId}
                 uploading={uploading}
+                canUndo={canUndo}
+                canRedo={canRedo}
                 onToolChange={setTool}
                 onColorChange={setColor}
                 onUpload={handleUpload}
                 onSave={handleSave}
                 onCancel={onCancel}
+                onUndo={undo}
+                onRedo={redo}
             />
 
             <div

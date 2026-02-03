@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered, Blend } from "lucide-react";
+import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered, Blend, Undo2, Redo2 } from "lucide-react";
 import type { Tool } from "../../types/editor";
 
 interface EditorToolbarProps {
@@ -7,11 +7,15 @@ interface EditorToolbarProps {
     color: string;
     selectedId: string | null;
     uploading: boolean;
+    canUndo: boolean;
+    canRedo: boolean;
     onToolChange: (tool: Tool) => void;
     onColorChange: (color: string) => void;
     onUpload: () => void;
     onSave: () => void;
     onCancel: () => void;
+    onUndo: () => void;
+    onRedo: () => void;
 }
 
 export function EditorToolbar({
@@ -19,16 +23,43 @@ export function EditorToolbar({
     color,
     selectedId,
     uploading,
+    canUndo,
+    canRedo,
     onToolChange,
     onColorChange,
     onUpload,
     onSave,
     onCancel,
+    onUndo,
+    onRedo,
 }: EditorToolbarProps) {
     return (
         <div className="bg-gray-800 border-b border-gray-700">
             <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onUndo}
+                        disabled={!canUndo}
+                        className="gap-1"
+                        title="Undo (Ctrl+Z)"
+                    >
+                        <Undo2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onRedo}
+                        disabled={!canRedo}
+                        className="gap-1"
+                        title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+                    >
+                        <Redo2 className="h-4 w-4" />
+                    </Button>
+
+                    <div className="w-px h-6 bg-gray-600 mx-1" />
+
                     <Button
                         size="sm"
                         variant={tool === "select" ? "default" : "outline"}
