@@ -29,7 +29,7 @@ pnpm tauri dev
 - [X] Settings - Shortcut error
 - [X] Upload - Session error
 - [X] Editor - Add arrow to image editor.
-- [] Editor - Add stepper to image editor. (On every click add new number to image)
+- [X] Editor - Add stepper to image editor. (On every click add new number to image)
 - [] Editor - Add blur to image editor.
 - [] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
 - [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
