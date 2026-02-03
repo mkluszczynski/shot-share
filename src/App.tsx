@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor/ImageEditor";
@@ -96,15 +96,14 @@ function App() {
       // Add padding to the window size (toolbar height + bottom padding)
       const TOOLBAR_HEIGHT = 60; // Height of the editor toolbar
       const PADDING = 100; // Extra padding around the image
-      const newWidth = width + PADDING;
-      const newHeight = height + TOOLBAR_HEIGHT + PADDING;
+      const MIN_WIDTH = 720; // Minimum window width
+      const MIN_HEIGHT = 460; // Minimum window height
+
+      const newWidth = Math.max(width + PADDING, MIN_WIDTH);
+      const newHeight = Math.max(height + TOOLBAR_HEIGHT + PADDING, MIN_HEIGHT);
 
       // Set window size to accommodate the image with padding
-      await window.setSize({
-        width: newWidth,
-        height: newHeight,
-        type: 'Physical'
-      });
+      await window.setSize(new PhysicalSize(newWidth, newHeight));
 
       // Center the window on screen
       await window.center();

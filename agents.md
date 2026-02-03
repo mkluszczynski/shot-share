@@ -43,6 +43,7 @@ pnpm tauri dev
 - [X] #003 While being in image editor and clicking alt+tab or losing focus on editor, window is disappearing 
 - [X] #004 Size of the window of image editor should be a bit bigger then taken screenshot automatically.
 - [X] #005 While using other programs esc is not working. I guess that our app is overriding global esc.
+- [X] #006 Taking small screenshot casing editor to shrink in size to much.
 
 ## Core Concepts
 
