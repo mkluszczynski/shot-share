@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
-import { ImageEditor } from "./components/ImageEditor";
+import { ImageEditor } from "./components/ImageEditor/ImageEditor";
 import { Settings as SettingsDialog } from "./components/Settings";
 import { Toaster } from "sonner";
 import type { Settings } from "./types/settings";
