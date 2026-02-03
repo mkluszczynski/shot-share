@@ -5,6 +5,7 @@ import { Button } from "./components/ui/button";
 import { RegionSelector } from "./components/RegionSelector";
 import { ImageEditor } from "./components/ImageEditor";
 import { Settings as SettingsDialog } from "./components/Settings";
+import { Toaster } from "sonner";
 import type { Settings } from "./types/settings";
 import "./index.css"
 
@@ -150,6 +151,8 @@ function App() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      <Toaster position="top-right" richColors closeButton />
     </main>
   );
 }

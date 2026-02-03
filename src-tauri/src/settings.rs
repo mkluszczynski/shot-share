@@ -14,6 +14,18 @@ pub struct SftpConfig {
     #[serde(skip)] // Don't serialize password to JSON
     pub password: String,
     pub remote_path: String,
+    #[serde(default = "default_base_url")]
+    pub base_url: String,
+    #[serde(default = "default_copy_to_clipboard")]
+    pub copy_to_clipboard: bool,
+}
+
+fn default_base_url() -> String {
+    String::from("https://example.com")
+}
+
+fn default_copy_to_clipboard() -> bool {
+    true
 }
 
 impl Default for SftpConfig {
@@ -24,6 +36,8 @@ impl Default for SftpConfig {
             username: String::new(),
             password: String::new(),
             remote_path: String::from("/uploads"),
+            base_url: String::from("https://example.com"),
+            copy_to_clipboard: true,
         }
     }
 }

@@ -12,6 +12,7 @@
     "dialog:allow-open",
     "core:window:allow-hide",
     "core:window:allow-show",
-    "core:window:allow-set-fullscreen"
+    "core:window:allow-set-fullscreen",
+    "clipboard-manager:allow-write-text"
   ]
 }

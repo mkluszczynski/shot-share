@@ -2,7 +2,11 @@ import { useRef, useEffect, useState } from "react";
 import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer } from "react-konva";
 import { Button } from "./ui/button";
 import Konva from "konva";
-import { Square, Type, MousePointer2 } from "lucide-react";
+import { Square, Type, MousePointer2, Upload } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { toast } from "sonner";
+import type { Settings } from "../types/settings";
 
 type Tool = "select" | "rectangle" | "text";
 
@@ -47,6 +51,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     const [shapes, setShapes] = useState<ShapeType[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [color, setColor] = useState("#ef4444");
+    const [uploading, setUploading] = useState(false);
 
     // Drawing state
     const [isDrawing, setIsDrawing] = useState(false);
@@ -266,6 +271,83 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         }));
     };
 
+    const handleUpload = async () => {
+        if (!stageRef.current) return;
+
+        try {
+            setUploading(true);
+            toast.info("Preparing image...");
+
+            // Get the edited image as data URL
+            setSelectedId(null);
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const dataUrl = stageRef.current.toDataURL();
+            if (!dataUrl) {
+                throw new Error("Failed to generate image");
+            }
+
+            toast.info("Loading settings...");
+            const settings = await invoke<Settings>("get_settings");
+            const sftpPassword = await invoke<string>("get_sftp_password");
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+            const filename = `screenshot-${timestamp}.png`;
+
+            // Save the image temporarily
+            const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+            const tempPath = `${settings.save_directory}/${filename}`;
+
+            toast.info("Saving image...");
+            await invoke("save_base64_image", {
+                base64Data,
+                savePath: tempPath,
+            });
+
+            toast.info("Uploading to SFTP...");
+            const remotePath = await invoke<string>("upload_to_sftp", {
+                filePath: tempPath,
+                filename,
+                host: settings.sftp.host,
+                port: settings.sftp.port,
+                username: settings.sftp.username,
+                password: sftpPassword,
+                remotePath: settings.sftp.remote_path,
+            });
+
+            // Construct the public URL
+            const baseUrl = settings.sftp.base_url.replace(/\/$/, ""); // Remove trailing slash
+            const publicUrl = `${baseUrl}/${filename}`;
+
+            // Copy to clipboard if enabled
+            if (settings.sftp.copy_to_clipboard) {
+                try {
+                    await writeText(publicUrl);
+                    toast.success("Uploaded! Link copied to clipboard");
+                } catch (clipboardError) {
+                    console.error("Failed to copy to clipboard:", clipboardError);
+                    toast.success(`Uploaded to ${remotePath}`, {
+                        description: "Clipboard copy failed"
+                    });
+                }
+            } else {
+                toast.success(`Uploaded successfully to ${remotePath}`);
+            }
+
+            setTimeout(() => {
+                onSave(dataUrl);
+            }, 1500);
+        } catch (error) {
+            console.error("Upload error:", error);
+            toast.error("Upload failed", {
+                description: String(error)
+            });
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSave = () => {
         if (!stageRef.current) return;
 
@@ -329,6 +411,16 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                         )}
                         <Button size="sm" variant="outline" onClick={onCancel}>
                             Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleUpload}
+                            disabled={uploading}
+                            className="gap-2"
+                        >
+                            <Upload className="h-4 w-4" />
+                            {uploading ? "Uploading..." : "Upload"}
                         </Button>
                         <Button size="sm" onClick={handleSave}>
                             Save

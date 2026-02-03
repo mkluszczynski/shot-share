@@ -28,6 +28,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     const [sftpUsername, setSftpUsername] = useState("");
     const [sftpPassword, setSftpPassword] = useState("");
     const [sftpRemotePath, setSftpRemotePath] = useState("");
+    const [sftpBaseUrl, setSftpBaseUrl] = useState("");
+    const [copyToClipboard, setCopyToClipboard] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isCapturingShortcut, setIsCapturingShortcut] = useState(false);
 
@@ -48,6 +50,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             setSftpUsername(loadedSettings.sftp.username);
             setSftpPassword(loadedSettings.sftp.password);
             setSftpRemotePath(loadedSettings.sftp.remote_path);
+            setSftpBaseUrl(loadedSettings.sftp.base_url);
+            setCopyToClipboard(loadedSettings.sftp.copy_to_clipboard);
         } catch (error) {
             console.error("Failed to load settings:", error);
         }
@@ -128,6 +132,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                     username: sftpUsername,
                     password: sftpPassword,
                     remote_path: sftpRemotePath,
+                    base_url: sftpBaseUrl,
+                    copy_to_clipboard: copyToClipboard,
                 },
             };
 
@@ -248,6 +254,32 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                                 onChange={(e) => setSftpRemotePath(e.target.value)}
                                 placeholder="/uploads"
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="sftpBaseUrl">Base URL</Label>
+                            <Input
+                                id="sftpBaseUrl"
+                                value={sftpBaseUrl}
+                                onChange={(e) => setSftpBaseUrl(e.target.value)}
+                                placeholder="https://example.com"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                The public URL where uploaded files can be accessed
+                            </p>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <input
+                                id="copyToClipboard"
+                                type="checkbox"
+                                checked={copyToClipboard}
+                                onChange={(e) => setCopyToClipboard(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <Label htmlFor="copyToClipboard" className="cursor-pointer">
+                                Copy link to clipboard after upload
+                            </Label>
                         </div>
                     </div>
                 </div>

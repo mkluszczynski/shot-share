@@ -4,6 +4,8 @@ export interface SftpConfig {
     username: string;
     password: string;
     remote_path: string;
+    base_url: string;
+    copy_to_clipboard: boolean;
 }
 
 export interface Settings {

@@ -7,6 +7,9 @@ use xcap::Monitor;
 mod settings;
 use settings::Settings;
 
+mod sftp;
+use sftp::SftpUploader;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -87,8 +90,40 @@ fn get_settings() -> Result<Settings, String> {
 }
 
 #[tauri::command]
+fn get_sftp_password() -> Result<String, String> {
+    let settings = Settings::load()?;
+    Ok(settings.sftp.password)
+}
+
+#[tauri::command]
 fn update_settings(settings: Settings) -> Result<(), String> {
     settings.save()
+}
+
+#[tauri::command]
+fn upload_to_sftp(
+    file_path: String,
+    filename: String,
+    host: String,
+    port: u16,
+    username: String,
+    password: String,
+    remote_path: String,
+) -> Result<String, String> {
+    let password_opt = if password.is_empty() {
+        None
+    } else {
+        Some(password)
+    };
+
+    let uploader = SftpUploader::new(host, port, username, password_opt, remote_path)
+        .map_err(|e| e.to_string())?;
+
+    let remote_file = uploader
+        .upload_file(&file_path, &filename)
+        .map_err(|e| e.to_string())?;
+
+    Ok(remote_file)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -98,13 +133,16 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             capture_screenshot,
             capture_full_screenshot,
             save_base64_image,
             get_settings,
-            update_settings
+            get_sftp_password,
+            update_settings,
+            upload_to_sftp
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

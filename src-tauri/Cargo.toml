@@ -23,10 +23,13 @@ tauri-plugin-opener = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-clipboard-manager = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 xcap = "0.0.12"
 base64 = "0.22"
 dirs = "5"
 keyring = "3"
+ssh2 = "0.9"
+thiserror = "2"
 

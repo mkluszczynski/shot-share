@@ -17,7 +17,7 @@ pnpm tauri dev
 - [X] Add text annotation tool
 - [X] Implement settings storage (JSON file)
 - [X] Create settings UI panel
-- [ ] Add SFTP upload functionality
+- [X] Add SFTP upload functionality
 - [ ] Integrate system tray with menu
 - [ ] Add keyboard shortcut registration
 - [ ] Test on Linux
