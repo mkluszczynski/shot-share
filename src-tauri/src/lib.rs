@@ -267,6 +267,36 @@ fn register_shortcut(app: AppHandle, shortcut_str: String) -> Result<(), String>
     Ok(())
 }
 
+#[tauri::command]
+fn register_escape_shortcut(app: AppHandle) -> Result<(), String> {
+    let shortcut = "Escape"
+        .parse::<Shortcut>()
+        .map_err(|e| format!("Failed to parse Escape shortcut: {}", e))?;
+
+    app.global_shortcut()
+        .on_shortcut(shortcut, move |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                let _ = app.emit("escape-pressed", ());
+            }
+        })
+        .map_err(|e| format!("Failed to register Escape shortcut: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn unregister_escape_shortcut(app: AppHandle) -> Result<(), String> {
+    let shortcut = "Escape"
+        .parse::<Shortcut>()
+        .map_err(|e| format!("Failed to parse Escape shortcut: {}", e))?;
+
+    app.global_shortcut()
+        .unregister(shortcut)
+        .map_err(|e| format!("Failed to unregister Escape shortcut: {}", e))?;
+
+    Ok(())
+}
+
 fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
@@ -357,7 +387,9 @@ pub fn run() {
             upload_to_sftp,
             show_main_window,
             hide_main_window,
-            register_shortcut
+            register_shortcut,
+            register_escape_shortcut,
+            unregister_escape_shortcut
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -64,6 +64,7 @@ function App() {
       setScreenshotDataUrl(dataUrl);
       await window.setFullscreen(true);
       await window.show();
+      await window.setFocus();
       setStatus("");
     } catch (error) {
       setStatus(`Error: ${error}`);
@@ -132,16 +133,21 @@ function App() {
     }
   }
 
-  function handleEditorCancel() {
+  async function handleEditorCancel() {
+    const window = getCurrentWindow();
+    await window.hide();
+    // Clear state after hiding to prevent flash
     setCroppedImageDataUrl(null);
-    setStatus("Screenshot cancelled");
+    setStatus("");
   }
 
   async function handleCancel() {
-    setScreenshotDataUrl(null);
     const window = getCurrentWindow();
     await window.setFullscreen(false);
-    setStatus("Screenshot cancelled");
+    await window.hide();
+    // Clear state after hiding to prevent flash
+    setScreenshotDataUrl(null);
+    setStatus("");
   }
 
   async function hideToTray() {

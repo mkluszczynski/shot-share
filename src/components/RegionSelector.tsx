@@ -1,4 +1,6 @@
-import { useState, useRef, MouseEvent } from "react";
+import { useState, useRef, MouseEvent, useEffect, KeyboardEvent } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 interface Region {
     startX: number;
@@ -17,6 +19,27 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
     const [region, setRegion] = useState<Region | null>(null);
     const [isSelecting, setIsSelecting] = useState(false);
     const overlayRef = useRef<HTMLDivElement>(null);
+
+    // Register ESC as a global shortcut when component mounts
+    useEffect(() => {
+        // Register global ESC shortcut
+        invoke("register_escape_shortcut").catch(err => {
+            console.error("Failed to register escape shortcut:", err);
+        });
+
+        // Listen for the escape event from Rust
+        const unlistenEscape = listen("escape-pressed", () => {
+            onCancel();
+        });
+
+        return () => {
+            // Cleanup: unregister ESC shortcut when component unmounts
+            invoke("unregister_escape_shortcut").catch(err => {
+                console.error("Failed to unregister escape shortcut:", err);
+            });
+            unlistenEscape.then(fn => fn());
+        };
+    }, [onCancel]);
 
     const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
         const rect = overlayRef.current?.getBoundingClientRect();
@@ -56,8 +79,9 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
         }
     };
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === "Escape") {
+            e.preventDefault();
             onCancel();
         }
     };
@@ -85,8 +109,6 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onKeyDown={(e) => handleKeyDown(e as any)}
-            tabIndex={0}
         >
             <img
                 src={screenshotDataUrl}

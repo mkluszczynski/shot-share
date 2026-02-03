@@ -38,6 +38,7 @@ pnpm tauri dev
 ## TODO Bug fixes
 
 - [X] #001 Closing image editor by clicking system X casing editor to open on next screenshot trigger.
+- [X] #002 Cannot cancel taking screenshot by pressing esc
 
 ## Core Concepts
 
