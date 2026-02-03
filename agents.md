@@ -33,6 +33,7 @@ pnpm tauri dev
 - [X] Editor - Add blur to image editor.
 - [X] Editor - Undo/redo (Ctrl+Z)
 - [X] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
+- [X] Tray - Update options: Take screenshot, partial screenshot, about, settings, upload settings
 - [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
 
 ## TODO Bug fixes

@@ -27,9 +27,17 @@ function App() {
         console.error("Failed to load settings:", error);
       });
 
-    // Listen for tray events to open settings
-    const unlistenSettings = listen("open-settings", () => {
+    // Listen for tray events
+    const unlistenGeneralSettings = listen("open-general-settings", () => {
       setCurrentView("general");
+    });
+
+    const unlistenUploadSettings = listen("open-upload-settings", () => {
+      setCurrentView("sftp");
+    });
+
+    const unlistenAbout = listen("open-about", () => {
+      setCurrentView("home");
     });
 
     // Listen for global shortcut to show region selector
@@ -45,7 +53,9 @@ function App() {
     });
 
     return () => {
-      unlistenSettings.then(fn => fn());
+      unlistenGeneralSettings.then(fn => fn());
+      unlistenUploadSettings.then(fn => fn());
+      unlistenAbout.then(fn => fn());
       unlistenShortcut.then(fn => fn());
       unlistenClose.then(fn => fn());
     };

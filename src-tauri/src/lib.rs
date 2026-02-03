@@ -298,16 +298,39 @@ fn unregister_escape_shortcut(app: AppHandle) -> Result<(), String> {
 }
 
 fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let show_i = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
-    let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+    let take_screenshot_i = MenuItem::with_id(
+        app,
+        "take-screenshot",
+        "Take Screenshot",
+        true,
+        None::<&str>,
+    )?;
+    let general_settings_i = MenuItem::with_id(
+        app,
+        "general-settings",
+        "General Settings",
+        true,
+        None::<&str>,
+    )?;
+    let upload_settings_i = MenuItem::with_id(
+        app,
+        "upload-settings",
+        "Upload Settings",
+        true,
+        None::<&str>,
+    )?;
+    let about_i = MenuItem::with_id(app, "about", "About", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(
         app,
         &[
-            &show_i,
+            &take_screenshot_i,
             &PredefinedMenuItem::separator(app)?,
-            &settings_i,
+            &general_settings_i,
+            &upload_settings_i,
+            &PredefinedMenuItem::separator(app)?,
+            &about_i,
             &PredefinedMenuItem::separator(app)?,
             &quit_i,
         ],
@@ -317,17 +340,34 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         .menu(&menu)
         .icon(app.default_window_icon().unwrap().clone())
         .on_menu_event(move |app, event| match event.id().as_ref() {
+            "take-screenshot" => {
+                let _ = app.emit("show-region-selector", ());
+            }
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
             }
-            "settings" => {
+            "general-settings" => {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
-                    let _ = window.emit("open-settings", ());
+                    let _ = window.emit("open-general-settings", ());
+                }
+            }
+            "upload-settings" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("open-upload-settings", ());
+                }
+            }
+            "about" => {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("open-about", ());
                 }
             }
             "quit" => {
