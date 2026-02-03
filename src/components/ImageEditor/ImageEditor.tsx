@@ -154,6 +154,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                     ...shape,
                     points: [x1 + deltaX, y1 + deltaY, x2 + deltaX, y2 + deltaY],
                 };
+            } else if (shape.type === "blur") {
+                return { ...shape, x: shape.x + deltaX, y: shape.y + deltaY };
             } else {
                 return { ...shape, x: deltaX, y: deltaY };
             }
@@ -176,6 +178,14 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             if (shape.id !== id) return shape;
 
             if (shape.type === "rect") {
+                return {
+                    ...shape,
+                    x: x,
+                    y: y,
+                    width: Math.max(5, shape.width * scaleX),
+                    height: Math.max(5, shape.height * scaleY),
+                };
+            } else if (shape.type === "blur") {
                 return {
                     ...shape,
                     x: x,
@@ -273,8 +283,11 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                                     shapes={shapes}
                                     currentRect={drawing.currentRect}
                                     currentArrow={drawing.currentArrow}
+                                    currentBlur={drawing.currentBlur}
                                     editingTextId={textEditing.editingText?.id ?? null}
                                     tool={tool}
+                                    selectedId={selectedId}
+                                    stageRef={stageRef}
                                     onShapeClick={handleShapeClick}
                                     onTextDblClick={textEditing.handleTextDblClick}
                                     onDragEnd={handleDragEnd}

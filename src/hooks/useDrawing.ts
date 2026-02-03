@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Tool, RectShape, ArrowShape } from "../types/editor";
+import type { Tool, RectShape, ArrowShape, BlurShape } from "../types/editor";
 import Konva from "konva";
 
 interface UseDrawingProps {
     tool: Tool;
     color: string;
-    onShapeComplete: (shape: RectShape | ArrowShape) => void;
+    onShapeComplete: (shape: RectShape | ArrowShape | BlurShape) => void;
     onToolChange: (tool: Tool) => void;
 }
 
@@ -14,6 +14,7 @@ export function useDrawing({ tool, color, onShapeComplete, onToolChange }: UseDr
     const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
     const [currentRect, setCurrentRect] = useState<RectShape | null>(null);
     const [currentArrow, setCurrentArrow] = useState<ArrowShape | null>(null);
+    const [currentBlur, setCurrentBlur] = useState<BlurShape | null>(null);
 
     const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
@@ -48,6 +49,19 @@ export function useDrawing({ tool, color, onShapeComplete, onToolChange }: UseDr
                 pointerWidth: 10,
             });
         }
+
+        if (tool === "blur") {
+            setIsDrawing(true);
+            setDrawStart(pos);
+            setCurrentBlur({
+                id: `blur-${Date.now()}`,
+                type: "blur",
+                x: pos.x,
+                y: pos.y,
+                width: 0,
+                height: 0,
+            });
+        }
     };
 
     const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -71,6 +85,14 @@ export function useDrawing({ tool, color, onShapeComplete, onToolChange }: UseDr
             setCurrentArrow({
                 ...currentArrow,
                 points: [drawStart.x, drawStart.y, pos.x, pos.y],
+            });
+        }
+
+        if (currentBlur) {
+            setCurrentBlur({
+                ...currentBlur,
+                width: pos.x - drawStart.x,
+                height: pos.y - drawStart.y,
             });
         }
     };
@@ -97,12 +119,23 @@ export function useDrawing({ tool, color, onShapeComplete, onToolChange }: UseDr
             setCurrentArrow(null);
             onToolChange("select");
         }
+
+        if (isDrawing && currentBlur) {
+            if (Math.abs(currentBlur.width) > 5 && Math.abs(currentBlur.height) > 5) {
+                onShapeComplete(currentBlur);
+            }
+            setIsDrawing(false);
+            setDrawStart(null);
+            setCurrentBlur(null);
+            onToolChange("select");
+        }
     };
 
     return {
         isDrawing,
         currentRect,
         currentArrow,
+        currentBlur,
         handleMouseDown,
         handleMouseMove,
         handleMouseUp,

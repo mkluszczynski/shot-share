@@ -17,7 +17,13 @@ export function useShapeSelection({ tool, layerRef }: UseShapeSelectionProps) {
         if (selectedId) {
             const node = layerRef.current.findOne(`#${selectedId}`);
             if (node) {
-                transformerRef.current.nodes([node]);
+                // Don't attach transformer to blur shapes (they shouldn't be resizable)
+                const isBlurShape = selectedId.startsWith('blur-');
+                if (isBlurShape) {
+                    transformerRef.current.nodes([]);
+                } else {
+                    transformerRef.current.nodes([node]);
+                }
             }
         } else {
             transformerRef.current.nodes([]);

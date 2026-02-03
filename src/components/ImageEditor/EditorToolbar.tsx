@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered } from "lucide-react";
+import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered, Blend } from "lucide-react";
 import type { Tool } from "../../types/editor";
 
 interface EditorToolbarProps {
@@ -64,6 +64,15 @@ export function EditorToolbar({
                     >
                         <ListOrdered className="h-4 w-4" />
                         Stepper
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant={tool === "blur" ? "default" : "outline"}
+                        onClick={() => onToolChange("blur")}
+                        className="gap-2"
+                    >
+                        <Blend className="h-4 w-4" />
+                        Blur
                     </Button>
                     <Button
                         size="sm"
