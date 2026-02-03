@@ -108,6 +108,35 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             return;
         }
 
+        if (tool === "stepper") {
+            // Find the lowest available number
+            const existingNumbers = shapes
+                .filter(s => s.type === "stepper")
+                .map(s => (s as any).number)
+                .sort((a, b) => a - b);
+
+            let nextNumber = 1;
+            for (const num of existingNumbers) {
+                if (num === nextNumber) {
+                    nextNumber++;
+                } else {
+                    break;
+                }
+            }
+
+            const stepperShape: ShapeType = {
+                id: `stepper-${Date.now()}`,
+                type: "stepper",
+                x: pos.x,
+                y: pos.y,
+                number: nextNumber,
+                fill: color,
+                fontSize: 16,
+            };
+            addShape(stepperShape);
+            return;
+        }
+
         drawing.handleMouseDown(e);
     };
 
@@ -136,8 +165,12 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     const handleTransformEnd = (id: string, node: Konva.Node) => {
         const scaleX = node.scaleX();
         const scaleY = node.scaleY();
+        const x = node.x();
+        const y = node.y();
+
         node.scaleX(1);
         node.scaleY(1);
+        node.position({ x: 0, y: 0 });
 
         setShapes(prev => prev.map(shape => {
             if (shape.id !== id) return shape;
@@ -145,16 +178,23 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             if (shape.type === "rect") {
                 return {
                     ...shape,
-                    x: node.x(),
-                    y: node.y(),
+                    x: x,
+                    y: y,
                     width: Math.max(5, shape.width * scaleX),
                     height: Math.max(5, shape.height * scaleY),
                 };
             } else if (shape.type === "text") {
                 return {
                     ...shape,
-                    x: node.x(),
-                    y: node.y(),
+                    x: x,
+                    y: y,
+                    fontSize: Math.max(12, shape.fontSize * scaleY),
+                };
+            } else if (shape.type === "stepper") {
+                return {
+                    ...shape,
+                    x: x,
+                    y: y,
                     fontSize: Math.max(12, shape.fontSize * scaleY),
                 };
             }

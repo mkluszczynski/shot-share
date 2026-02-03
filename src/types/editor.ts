@@ -1,8 +1,8 @@
-export type Tool = "select" | "rectangle" | "text" | "arrow";
+export type Tool = "select" | "rectangle" | "text" | "arrow" | "stepper";
 
 export interface Shape {
     id: string;
-    type: "rect" | "text" | "arrow";
+    type: "rect" | "text" | "arrow" | "stepper";
 }
 
 export interface RectShape extends Shape {
@@ -31,7 +31,16 @@ export interface ArrowShape extends Shape {
     pointerWidth: number;
 }
 
-export type ShapeType = RectShape | TextShape | ArrowShape;
+export interface StepperShape extends Shape {
+    type: "stepper";
+    x: number;
+    y: number;
+    number: number;
+    fill: string;
+    fontSize: number;
+}
+
+export type ShapeType = RectShape | TextShape | ArrowShape | StepperShape;
 
 export interface TextEditingState {
     id: string;

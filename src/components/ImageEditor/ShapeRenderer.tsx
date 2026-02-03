@@ -1,6 +1,6 @@
-import { Rect, Text, Arrow } from "react-konva";
+import { Rect, Text, Arrow, Circle, Group } from "react-konva";
 import Konva from "konva";
-import type { ShapeType, RectShape, TextShape, ArrowShape } from "../types/editor";
+import type { ShapeType, RectShape, TextShape, ArrowShape } from "../../types/editor";
 
 interface ShapeRendererProps {
     shapes: ShapeType[];
@@ -83,6 +83,37 @@ export function ShapeRenderer({
                             onDragEnd={(e) => onDragEnd(shape.id, e)}
                             onTransformEnd={(e) => onTransformEnd(shape.id, e.target)}
                         />
+                    );
+                } else if (shape.type === "stepper") {
+                    const radius = shape.fontSize;
+                    return (
+                        <Group
+                            key={shape.id}
+                            id={shape.id}
+                            x={shape.x}
+                            y={shape.y}
+                            draggable={tool === "select"}
+                            onClick={() => onShapeClick(shape.id)}
+                            onDragEnd={(e) => onDragEnd(shape.id, e)}
+                            onTransformEnd={(e) => onTransformEnd(shape.id, e.target)}
+                        >
+                            <Circle
+                                radius={radius}
+                                fill={shape.fill}
+                            />
+                            <Text
+                                x={-radius}
+                                y={-shape.fontSize / 2}
+                                width={radius * 2}
+                                text={shape.number.toString()}
+                                fontSize={shape.fontSize}
+                                fill="#ffffff"
+                                fontFamily="Arial"
+                                fontStyle="bold"
+                                align="center"
+                                verticalAlign="middle"
+                            />
+                        </Group>
                     );
                 }
                 return null;
