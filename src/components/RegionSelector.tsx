@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent, useEffect, KeyboardEvent } from "react";
+import { useState, useRef, MouseEvent, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
@@ -22,20 +22,27 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
 
     // Register ESC as a global shortcut when component mounts
     useEffect(() => {
-        // Register global ESC shortcut
-        invoke("register_escape_shortcut").catch(err => {
-            console.error("Failed to register escape shortcut:", err);
-        });
+        // Register global ESC shortcut after a small delay to ensure window is focused
+        const timer = setTimeout(() => {
+            invoke("register_escape_shortcut").catch(err => {
+                console.error("Failed to register escape shortcut:", err);
+            });
+        }, 50);
 
         // Listen for the escape event from Rust
-        const unlistenEscape = listen("escape-pressed", () => {
+        const unlistenEscape = listen("escape-pressed", async () => {
+            // Unregister ESC shortcut BEFORE calling onCancel to ensure it completes
+            await invoke("unregister_escape_shortcut").catch(err => {
+                console.error("Failed to unregister escape shortcut:", err);
+            });
             onCancel();
         });
 
         return () => {
-            // Cleanup: unregister ESC shortcut when component unmounts
-            invoke("unregister_escape_shortcut").catch(err => {
-                console.error("Failed to unregister escape shortcut:", err);
+            clearTimeout(timer);
+            // Cleanup: unregister ESC shortcut when component unmounts (if not already done)
+            invoke("unregister_escape_shortcut").catch(() => {
+                // Ignore errors here as it might already be unregistered
             });
             unlistenEscape.then(fn => fn());
         };
@@ -64,7 +71,7 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
         setRegion({ ...region, endX: x, endY: y });
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
         if (!region) return;
 
         setIsSelecting(false);
@@ -75,14 +82,11 @@ export function RegionSelector({ screenshotDataUrl, onRegionSelected, onCancel }
         const height = Math.abs(region.endY - region.startY);
 
         if (width > 5 && height > 5) {
+            // Unregister ESC shortcut BEFORE calling onRegionSelected to ensure it completes
+            await invoke("unregister_escape_shortcut").catch(err => {
+                console.error("Failed to unregister escape shortcut:", err);
+            });
             onRegionSelected(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
-        }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === "Escape") {
-            e.preventDefault();
-            onCancel();
         }
     };
 

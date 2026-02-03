@@ -74,6 +74,8 @@ function App() {
       await window.setFullscreen(true);
       await window.show();
       await window.setFocus();
+      // Give a moment for focus to be set before ESC shortcut is registered
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       console.error("Screenshot error:", error);
       const window = getCurrentWindow();
