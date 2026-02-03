@@ -252,25 +252,9 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     return (
-        <div className="fixed inset-0 flex flex-col bg-gray-900">
-            <EditorToolbar
-                tool={tool}
-                color={color}
-                selectedId={selectedId}
-                uploading={uploading}
-                canUndo={canUndo}
-                canRedo={canRedo}
-                onToolChange={setTool}
-                onColorChange={setColor}
-                onUpload={handleUpload}
-                onSave={handleSave}
-                onCancel={onCancel}
-                onUndo={undo}
-                onRedo={redo}
-            />
-
+        <div className="fixed inset-0 flex flex-col bg-background">
             <div
-                className="flex-1 flex items-center justify-center overflow-auto p-4"
+                className="flex-1 flex items-center justify-center overflow-auto p-4 pb-28"
                 onClick={(e) => {
                     if (e.target === e.currentTarget) {
                         clearSelection();
@@ -278,7 +262,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 }}
             >
                 {image && (
-                    <div className="relative">
+                    <div className="relative animate-fade-in">
                         <Stage
                             ref={stageRef}
                             width={image.width}
@@ -286,7 +270,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                             onMouseDown={handleStageMouseDown}
                             onMouseMove={drawing.handleMouseMove}
                             onMouseUp={drawing.handleMouseUp}
-                            className="shadow-lg"
+                            className="shadow-2xl rounded-lg border border-border/20"
                         >
                             <Layer ref={layerRef}>
                                 <KonvaImage image={image} />
@@ -324,6 +308,22 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                     </div>
                 )}
             </div>
+
+            <EditorToolbar
+                tool={tool}
+                color={color}
+                selectedId={selectedId}
+                uploading={uploading}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onToolChange={setTool}
+                onColorChange={setColor}
+                onUpload={handleUpload}
+                onSave={handleSave}
+                onCancel={onCancel}
+                onUndo={undo}
+                onRedo={redo}
+            />
         </div>
     );
 }

@@ -34,7 +34,7 @@ pnpm tauri dev
 - [X] Editor - Undo/redo (Ctrl+Z)
 - [X] Settings - Refactor settings. Settings as a core view of the app not just dialog popup.
 - [X] Tray - Update options: Take screenshot, partial screenshot, about, settings, upload settings
-- [] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
+- [X] UI/UX - Redesign current interface. Use [front end design skill](.github/skills/frontend-design/SKILL.md)
 
 ## TODO Bug fixes
 
@@ -42,6 +42,7 @@ pnpm tauri dev
 - [X] #002 Cannot cancel taking screenshot by pressing esc
 - [X] #003 While being in image editor and clicking alt+tab or losing focus on editor, window is disappearing 
 - [X] #004 Size of the window of image editor should be a bit bigger then taken screenshot automatically.
+- [] #005 While using other programs esc is not working. I guess that our app is overriding global esc.
 
 ## Core Concepts
 

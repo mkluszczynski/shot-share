@@ -127,57 +127,74 @@ export function GeneralSettings() {
     }
 
     return (
-        <div className="flex-1 p-8 overflow-y-auto">
-            <div className="max-w-2xl mx-auto space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
-                    <p className="text-gray-600 mt-2">
+        <div className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto p-8 space-y-6">
+                <div className="space-y-2 animate-fade-in">
+                    <div className="flex items-center gap-2">
+                        <div className="w-1 h-8 bg-primary rounded-full" />
+                        <h1 className="text-3xl font-bold text-foreground">General Settings</h1>
+                    </div>
+                    <p className="text-muted-foreground ml-3">
                         Configure screenshot save location and keyboard shortcuts
                     </p>
                 </div>
 
-                <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200">
-                    <div className="space-y-2">
-                        <Label htmlFor="saveDirectory">Save Directory</Label>
+                <div className="space-y-5 bg-card p-6 rounded-xl border border-border/50 shadow-lg animate-slide-up">
+                    <div className="space-y-3">
+                        <Label htmlFor="saveDirectory" className="text-sm font-medium text-foreground">
+                            Save Directory
+                        </Label>
                         <div className="flex gap-2">
                             <Input
                                 id="saveDirectory"
                                 value={saveDirectory}
                                 onChange={(e) => setSaveDirectory(e.target.value)}
                                 placeholder="/path/to/screenshots"
+                                className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                             />
-                            <Button onClick={handleBrowseDirectory} variant="outline">
+                            <Button
+                                onClick={handleBrowseDirectory}
+                                variant="outline"
+                                className="shrink-0 hover:border-primary/50 hover:text-primary transition-all"
+                            >
                                 Browse
                             </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                             Location where screenshots will be saved by default
                         </p>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="screenshotShortcut">Screenshot Shortcut</Label>
+                    <div className="h-px bg-border/50" />
+
+                    <div className="space-y-3">
+                        <Label htmlFor="screenshotShortcut" className="text-sm font-medium text-foreground">
+                            Screenshot Shortcut
+                        </Label>
                         <Input
                             id="screenshotShortcut"
                             value={
-                                isCapturingShortcut ? "Press keys..." : screenshotShortcut
+                                isCapturingShortcut ? "⌨️ Press keys..." : screenshotShortcut
                             }
                             onClick={handleShortcutInputClick}
                             onKeyDown={handleShortcutKeyDown}
                             onBlur={handleShortcutInputBlur}
                             readOnly
                             placeholder="Click and press keys"
-                            className="cursor-pointer"
+                            className="cursor-pointer font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all hover:border-primary/30"
                         />
-                        <p className="text-xs text-muted-foreground">
-                            Click the field and press your desired key combination (e.g.,
-                            Ctrl+Shift+S)
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Click the field and press your desired key combination (e.g., Ctrl+Shift+S)
                         </p>
                     </div>
 
-                    <div className="pt-4">
-                        <Button onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? "Saving..." : "Save Changes"}
+                    <div className="pt-4 flex justify-end">
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 disabled:opacity-50"
+                        >
+                            {isSaving ? "⏳ Saving..." : "💾 Save Changes"}
                         </Button>
                     </div>
                 </div>

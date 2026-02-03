@@ -106,63 +106,71 @@ export function SftpSettings() {
     }
 
     return (
-        <div className="flex-1 p-8 overflow-y-auto">
-            <div className="max-w-2xl mx-auto space-y-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">SFTP Upload Settings</h1>
-                    <p className="text-gray-600 mt-2">
+        <div className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto p-8 space-y-6">
+                <div className="space-y-2 animate-fade-in">
+                    <div className="flex items-center gap-2">
+                        <div className="w-1 h-8 bg-primary rounded-full" />
+                        <h1 className="text-3xl font-bold text-foreground">SFTP Upload</h1>
+                    </div>
+                    <p className="text-muted-foreground ml-3">
                         Configure automatic upload to your SFTP server
                     </p>
                 </div>
 
-                <div className="space-y-6 bg-white p-6 rounded-lg border border-gray-200">
-                    <div className="space-y-2">
-                        <Label htmlFor="sftpHost">Host</Label>
-                        <Input
-                            id="sftpHost"
-                            value={sftpHost}
-                            onChange={(e) => setSftpHost(e.target.value)}
-                            placeholder="example.com"
-                        />
+                <div className="space-y-5 bg-card p-6 rounded-xl border border-border/50 shadow-lg animate-slide-up">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-2 space-y-3">
+                            <Label htmlFor="sftpHost" className="text-sm font-medium text-foreground">Host</Label>
+                            <Input
+                                id="sftpHost"
+                                value={sftpHost}
+                                onChange={(e) => setSftpHost(e.target.value)}
+                                placeholder="example.com"
+                                className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label htmlFor="sftpPort" className="text-sm font-medium text-foreground">Port</Label>
+                            <Input
+                                id="sftpPort"
+                                type="number"
+                                value={sftpPort}
+                                onChange={(e) => setSftpPort(parseInt(e.target.value) || 22)}
+                                placeholder="22"
+                                className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
+                            />
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="sftpPort">Port</Label>
-                        <Input
-                            id="sftpPort"
-                            type="number"
-                            value={sftpPort}
-                            onChange={(e) => setSftpPort(parseInt(e.target.value) || 22)}
-                            placeholder="22"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="sftpUsername">Username</Label>
+                    <div className="space-y-3">
+                        <Label htmlFor="sftpUsername" className="text-sm font-medium text-foreground">Username</Label>
                         <Input
                             id="sftpUsername"
                             value={sftpUsername}
                             onChange={(e) => setSftpUsername(e.target.value)}
                             placeholder="username"
+                            className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                         />
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-background/30 border border-border/30 hover:border-primary/30 transition-all">
                         <input
                             id="useSshKey"
                             type="checkbox"
                             checked={useSshKey}
                             onChange={(e) => setUseSshKey(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300"
+                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
                         />
-                        <Label htmlFor="useSshKey" className="cursor-pointer">
+                        <Label htmlFor="useSshKey" className="cursor-pointer text-sm text-foreground">
                             Use SSH key authentication (instead of password)
                         </Label>
                     </div>
 
                     {!useSshKey && (
-                        <div className="space-y-2">
-                            <Label htmlFor="sftpPassword">Password</Label>
+                        <div className="space-y-3">
+                            <Label htmlFor="sftpPassword" className="text-sm font-medium text-foreground">Password</Label>
                             <Input
                                 id="sftpPassword"
                                 type="password"
@@ -170,65 +178,75 @@ export function SftpSettings() {
                                 onChange={(e) => setSftpPassword(e.target.value)}
                                 placeholder={
                                     hasExistingPassword
-                                        ? "(password saved - leave blank to keep)"
-                                        : "password"
+                                        ? "🔒 (password saved - leave blank to keep)"
+                                        : "Enter password"
                                 }
+                                className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                             />
                             {hasExistingPassword && (
-                                <p className="text-xs text-muted-foreground">
-                                    Leave blank to keep existing password
+                                <p className="text-xs text-primary/70 leading-relaxed">
+                                    ✓ Password saved. Leave blank to keep existing password
                                 </p>
                             )}
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <Label htmlFor="sftpRemotePath">Remote Path</Label>
+                    <div className="h-px bg-border/50" />
+
+                    <div className="space-y-3">
+                        <Label htmlFor="sftpRemotePath" className="text-sm font-medium text-foreground">Remote Path</Label>
                         <Input
                             id="sftpRemotePath"
                             value={sftpRemotePath}
                             onChange={(e) => setSftpRemotePath(e.target.value)}
                             placeholder="/uploads"
+                            className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="sftpBaseUrl">Base URL</Label>
+                    <div className="space-y-3">
+                        <Label htmlFor="sftpBaseUrl" className="text-sm font-medium text-foreground">Base URL</Label>
                         <Input
                             id="sftpBaseUrl"
                             value={sftpBaseUrl}
                             onChange={(e) => setSftpBaseUrl(e.target.value)}
                             placeholder="https://example.com"
+                            className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                             The public URL where uploaded files can be accessed
                         </p>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-background/30 border border-border/30 hover:border-primary/30 transition-all">
                         <input
                             id="copyToClipboard"
                             type="checkbox"
                             checked={copyToClipboard}
                             onChange={(e) => setCopyToClipboard(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300"
+                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
                         />
-                        <Label htmlFor="copyToClipboard" className="cursor-pointer">
+                        <Label htmlFor="copyToClipboard" className="cursor-pointer text-sm text-foreground">
                             Copy link to clipboard after upload
                         </Label>
                     </div>
 
-                    <div className="pt-4 flex gap-3">
+                    <div className="pt-4 flex gap-3 justify-between">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handleTestConnection}
                             disabled={isTestingConnection || !sftpHost || !sftpUsername}
+                            className="hover:border-primary/50 hover:text-primary transition-all disabled:opacity-50"
                         >
-                            {isTestingConnection ? "Testing..." : "Test Connection"}
+                            {isTestingConnection ? "⏳ Testing..." : "🔌 Test Connection"}
                         </Button>
-                        <Button onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? "Saving..." : "Save Changes"}
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 disabled:opacity-50"
+                        >
+                            {isSaving ? "⏳ Saving..." : "💾 Save Changes"}
                         </Button>
                     </div>
                 </div>

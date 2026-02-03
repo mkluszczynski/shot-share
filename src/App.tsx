@@ -198,7 +198,7 @@ function App() {
 
       {/* Main application UI - hidden when in screenshot/editor mode */}
       {!screenshotDataUrl && !croppedImageDataUrl && (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen bg-background">
           <Sidebar currentView={currentView} onNavigate={setCurrentView} />
           {renderMainContent()}
         </div>

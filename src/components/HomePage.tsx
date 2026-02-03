@@ -1,4 +1,4 @@
-import { Keyboard, Image, Upload, Settings } from "lucide-react";
+import { Keyboard, Image, Upload, Settings, Zap, Target, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -15,124 +15,142 @@ export function HomePage({ onTakeScreenshot }: HomePageProps) {
         }
     }
 
-    return (
-        <div className="flex-1 p-8 overflow-y-auto">
-            <div className="max-w-4xl mx-auto space-y-8">
-                {/* Welcome Section */}
-                <div className="space-y-4">
-                    <h1 className="text-4xl font-bold text-gray-900">
-                        Welcome to Shot Share
-                    </h1>
-                    <p className="text-lg text-gray-600">
-                        A powerful screenshot tool with built-in editing and SFTP upload capabilities.
-                    </p>
-                </div>
+    const features = [
+        {
+            id: "global-shortcuts",
+            icon: Keyboard,
+            title: "Global Shortcuts",
+            description: "Instant capture from anywhere with customizable hotkeys",
+            color: "from-cyan-500/10 to-blue-500/10 border-cyan-500/20"
+        },
+        {
+            id: "precision-editor",
+            icon: Target,
+            title: "Precision Editor",
+            description: "Annotate with shapes, text, arrows, blur, and numbered steps",
+            color: "from-purple-500/10 to-pink-500/10 border-purple-500/20"
+        },
+        {
+            id: "sftp-upload",
+            icon: Upload,
+            title: "SFTP Upload",
+            description: "Auto-upload to your server with shareable links",
+            color: "from-green-500/10 to-emerald-500/10 border-green-500/20"
+        },
+        {
+            id: "customizable",
+            icon: Sparkles,
+            title: "Customizable",
+            description: "Configure paths, shortcuts, and upload settings",
+            color: "from-orange-500/10 to-amber-500/10 border-orange-500/20"
+        }
+    ];
 
-                {/* Quick Actions */}
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold text-gray-900">Quick Actions</h2>
-                    <div className="grid grid-cols-2 gap-4">
+    return (
+        <div className="flex-1 overflow-y-auto">
+            <div className="max-w-5xl mx-auto p-8 space-y-8">
+                {/* Hero Section */}
+                <div className="space-y-6 animate-fade-in">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                        <Zap className="h-3 w-3 text-primary" />
+                        <span className="text-xs font-mono text-primary">Lightning Fast Screenshots</span>
+                    </div>
+
+                    <div className="space-y-3">
+                        <h1 className="text-5xl font-bold text-foreground tracking-tight">
+                            Capture.<br />
+                            <span className="text-primary">Edit.</span> Share.
+                        </h1>
+                        <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
+                            Professional screenshot tool with built-in editing and instant SFTP upload.
+                            Streamline your workflow.
+                        </p>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="flex gap-3 pt-2">
                         <Button
                             onClick={onTakeScreenshot}
                             size="lg"
-                            className="h-24 text-lg"
+                            className="h-12 px-6 text-base gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:scale-105"
                         >
-                            <Image className="h-6 w-6 mr-2" />
+                            <Image className="h-5 w-5" />
                             Take Screenshot
                         </Button>
                         <Button
                             onClick={handleHideToTray}
                             variant="outline"
                             size="lg"
-                            className="h-24 text-lg"
+                            className="h-12 px-6 text-base border-border hover:bg-secondary hover:border-primary/30 transition-all"
                         >
                             Hide to Tray
                         </Button>
                     </div>
                 </div>
 
-                {/* Features Overview */}
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold text-gray-900">Features</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-primary/10 rounded-lg">
-                                    <Keyboard className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                        Global Shortcuts
-                                    </h3>
-                                    <p className="text-sm text-gray-600">
-                                        Capture screenshots instantly from anywhere using customizable keyboard shortcuts.
-                                    </p>
+                {/* Features Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    {features.map((feature, index) => {
+                        const Icon = feature.icon;
+                        return (
+                            <div
+                                key={feature.id}
+                                style={{ animationDelay: `${index * 100}ms` }}
+                                className={`group p-5 rounded-xl bg-gradient-to-br ${feature.color} border backdrop-blur-sm hover:scale-[1.02] transition-all duration-300 animate-slide-up`}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2.5 bg-card/50 rounded-lg border border-border/50 group-hover:border-primary/30 transition-colors">
+                                        <Icon className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <h3 className="font-semibold text-foreground">
+                                            {feature.title}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {feature.description}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        );
+                    })}
+                </div>
 
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-primary/10 rounded-lg">
-                                    <Image className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                        Built-in Editor
-                                    </h3>
-                                    <p className="text-sm text-gray-600">
-                                        Annotate screenshots with shapes, text, arrows, blur effects, and more.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                {/* Quick Start Guide */}
+                <div className="p-6 rounded-xl bg-card border border-border/50 space-y-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-1 h-6 bg-primary rounded-full" />
+                        <h2 className="text-xl font-semibold text-foreground">Quick Start</h2>
+                    </div>
 
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-primary/10 rounded-lg">
-                                    <Upload className="h-6 w-6 text-primary" />
+                    <div className="grid gap-3">
+                        {[
+                            { num: "1", text: "Configure settings and SFTP upload (optional)" },
+                            { num: "2", text: "Press Ctrl+Shift+S or click Take Screenshot" },
+                            { num: "3", text: "Select region → Edit → Save or Upload" }
+                        ].map((step) => (
+                            <div key={step.num} className="flex items-start gap-3 group">
+                                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-mono text-sm text-primary font-semibold group-hover:bg-primary/20 transition-colors">
+                                    {step.num}
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                        SFTP Upload
-                                    </h3>
-                                    <p className="text-sm text-gray-600">
-                                        Automatically upload screenshots to your server via SFTP with shareable links.
-                                    </p>
-                                </div>
+                                <p className="text-muted-foreground pt-0.5 leading-relaxed">{step.text}</p>
                             </div>
-                        </div>
-
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-primary/10 rounded-lg">
-                                    <Settings className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">
-                                        Customizable
-                                    </h3>
-                                    <p className="text-sm text-gray-600">
-                                        Configure save directories, keyboard shortcuts, and upload settings to your needs.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Getting Started */}
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-semibold text-gray-900">Getting Started</h2>
-                    <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                        <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                            <li>Configure your settings in the <strong>General Settings</strong> section</li>
-                            <li>Set up SFTP upload in <strong>SFTP Upload</strong> (optional)</li>
-                            <li>Press your screenshot shortcut or click <strong>Take Screenshot</strong></li>
-                            <li>Select the region you want to capture</li>
-                            <li>Edit your screenshot with the built-in editor</li>
-                            <li>Save and automatically upload (if configured)</li>
-                        </ol>
+                {/* Keyboard Shortcut Hint */}
+                <div className="flex items-center justify-center gap-6 p-6 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-primary/10">
+                    <span className="text-sm text-muted-foreground font-medium">Default Shortcut:</span>
+                    <div className="flex items-center gap-2">
+                        {['Ctrl', 'Shift', 'S'].map((key, i, arr) => (
+                            <>
+                                <kbd key={key} className="px-3 py-1.5 bg-card border border-border rounded-lg font-mono text-sm text-foreground shadow-sm">
+                                    {key}
+                                </kbd>
+                                {i < arr.length - 1 && <span className="text-muted-foreground">+</span>}
+                            </>
+                        ))}
                     </div>
                 </div>
             </div>
