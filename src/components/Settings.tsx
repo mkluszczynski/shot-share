@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -54,6 +55,9 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             setCopyToClipboard(loadedSettings.sftp.copy_to_clipboard);
         } catch (error) {
             console.error("Failed to load settings:", error);
+            toast.error("Failed to load settings", {
+                description: String(error)
+            });
         }
     }
 
@@ -138,10 +142,13 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
             };
 
             await invoke("update_settings", { settings: updatedSettings });
-            console.log("Settings saved successfully");
+            toast.success("Settings saved successfully");
             onClose();
         } catch (error) {
             console.error("Failed to save settings:", error);
+            toast.error("Failed to save settings", {
+                description: String(error)
+            });
         } finally {
             setIsSaving(false);
         }

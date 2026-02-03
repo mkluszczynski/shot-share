@@ -152,7 +152,7 @@ function App() {
         onClose={() => setIsSettingsOpen(false)}
       />
 
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster position="bottom-right" richColors closeButton />
     </main>
   );
 }
