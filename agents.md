@@ -39,6 +39,7 @@ pnpm tauri dev
 
 - [X] #001 Closing image editor by clicking system X casing editor to open on next screenshot trigger.
 - [X] #002 Cannot cancel taking screenshot by pressing esc
+- [X] #003 While being in image editor and clicking alt+tab or losing focus on editor, window is disappearing 
 
 ## Core Concepts
 

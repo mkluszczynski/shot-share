@@ -15,8 +15,7 @@
         "title": "shot-share",
         "width": 800,
         "height": 600,
-        "visible": false,
-        "skipTaskbar": true
+        "visible": false
       }
     ],
     "security": {

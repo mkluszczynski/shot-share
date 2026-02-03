@@ -368,12 +368,20 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // Emit event to frontend to clean up state before hiding
-                let _ = window.emit("window-close-requested", ());
-                // Prevent the window from closing and hide it instead
-                window.hide().unwrap();
-                api.prevent_close();
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    // Emit event to frontend to clean up state before hiding
+                    let _ = window.emit("window-close-requested", ());
+                    // Prevent the window from closing and hide it instead
+                    window.hide().unwrap();
+                    api.prevent_close();
+                }
+                tauri::WindowEvent::Focused(false) => {
+                    // Prevent window from auto-hiding when it loses focus (e.g., Alt+Tab)
+                    // This fixes bug #003 where the window disappears when losing focus
+                    // Note: We intentionally do nothing here to keep the window visible
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
