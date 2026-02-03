@@ -200,6 +200,8 @@ export function ShapeRenderer({
                     if (editingTextId && editingTextId === shape.id) {
                         return null;
                     }
+                    const isEditingThisText = editingTextId && editingTextId === shape.id;
+                    const canInteract = tool === "select" && !isEditingThisText;
                     return (
                         <Text
                             key={shape.id}
@@ -211,9 +213,10 @@ export function ShapeRenderer({
                             fill={shape.fill}
                             fontFamily="Arial"
                             lineHeight={1.2}
-                            draggable={tool === "select"}
-                            onClick={() => onShapeClick(shape.id)}
-                            onDblClick={() => onTextDblClick(shape)}
+                            draggable={canInteract}
+                            listening={canInteract}
+                            onClick={() => canInteract && onShapeClick(shape.id)}
+                            onDblClick={() => canInteract && onTextDblClick(shape)}
                             onDragEnd={(e) => onDragEnd(shape.id, e)}
                             onTransformEnd={(e) => onTransformEnd(shape.id, e.target)}
                         />

@@ -68,6 +68,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         onShapeAdd: addShape,
         onShapeUpdate: updateShape,
         onToolChange: setTool,
+        clearSelection,
     });
 
     useKeyboardShortcuts({
@@ -294,7 +295,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                                     onTransformEnd={handleTransformEnd}
                                 />
 
-                                {tool === "select" && <Transformer ref={transformerRef} />}
+                                {tool === "select" && !textEditing.editingText && <Transformer ref={transformerRef} />}
                             </Layer>
                         </Stage>
 

@@ -8,6 +8,7 @@ interface UseTextEditingProps {
     onShapeAdd: (shape: TextShape) => void;
     onShapeUpdate: (id: string, updates: Partial<TextShape>) => void;
     onToolChange: (tool: Tool) => void;
+    clearSelection: () => void;
 }
 
 export function useTextEditing({
@@ -16,7 +17,8 @@ export function useTextEditing({
     shapes,
     onShapeAdd,
     onShapeUpdate,
-    onToolChange
+    onToolChange,
+    clearSelection
 }: UseTextEditingProps) {
     const [editingText, setEditingText] = useState<TextEditingState | null>(null);
     const [textValue, setTextValue] = useState("");
@@ -32,6 +34,7 @@ export function useTextEditing({
     };
 
     const handleTextDblClick = (shape: TextShape) => {
+        clearSelection();
         setEditingText({
             id: shape.id,
             x: shape.x,
