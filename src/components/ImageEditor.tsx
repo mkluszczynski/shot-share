@@ -1,18 +1,18 @@
 import { useRef, useEffect, useState } from "react";
-import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Rect, Text, Transformer, Arrow } from "react-konva";
 import { Button } from "./ui/button";
 import Konva from "konva";
-import { Square, Type, MousePointer2, Upload } from "lucide-react";
+import { Square, Type, MousePointer2, Upload, MoveRight } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 import type { Settings } from "../types/settings";
 
-type Tool = "select" | "rectangle" | "text";
+type Tool = "select" | "rectangle" | "text" | "arrow";
 
 interface Shape {
     id: string;
-    type: "rect" | "text";
+    type: "rect" | "text" | "arrow";
 }
 
 interface RectShape extends Shape {
@@ -33,7 +33,15 @@ interface TextShape extends Shape {
     fontSize: number;
 }
 
-type ShapeType = RectShape | TextShape;
+interface ArrowShape extends Shape {
+    type: "arrow";
+    points: number[];
+    stroke: string;
+    pointerLength: number;
+    pointerWidth: number;
+}
+
+type ShapeType = RectShape | TextShape | ArrowShape;
 
 interface ImageEditorProps {
     imageDataUrl: string;
@@ -57,6 +65,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     const [isDrawing, setIsDrawing] = useState(false);
     const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
     const [currentRect, setCurrentRect] = useState<RectShape | null>(null);
+    const [currentArrow, setCurrentArrow] = useState<ArrowShape | null>(null);
 
     // Text editing state
     const [editingText, setEditingText] = useState<{
@@ -141,6 +150,19 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             });
         }
 
+        if (tool === "arrow") {
+            setIsDrawing(true);
+            setDrawStart(pos);
+            setCurrentArrow({
+                id: `arrow-${Date.now()}`,
+                type: "arrow",
+                points: [pos.x, pos.y, pos.x, pos.y],
+                stroke: color,
+                pointerLength: 10,
+                pointerWidth: 10,
+            });
+        }
+
         if (tool === "text") {
             const id = `text-${Date.now()}`;
             setEditingText({ id, x: pos.x, y: pos.y, fontSize: 24 });
@@ -150,7 +172,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     const handleStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
-        if (!isDrawing || !drawStart || !currentRect) return;
+        if (!isDrawing || !drawStart) return;
 
         const stage = e.target.getStage();
         if (!stage) return;
@@ -158,11 +180,20 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         const pos = stage.getPointerPosition();
         if (!pos) return;
 
-        setCurrentRect({
-            ...currentRect,
-            width: pos.x - drawStart.x,
-            height: pos.y - drawStart.y,
-        });
+        if (currentRect) {
+            setCurrentRect({
+                ...currentRect,
+                width: pos.x - drawStart.x,
+                height: pos.y - drawStart.y,
+            });
+        }
+
+        if (currentArrow) {
+            setCurrentArrow({
+                ...currentArrow,
+                points: [drawStart.x, drawStart.y, pos.x, pos.y],
+            });
+        }
     };
 
     const handleStageMouseUp = () => {
@@ -174,6 +205,19 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             setIsDrawing(false);
             setDrawStart(null);
             setCurrentRect(null);
+            setTool("select");
+        }
+
+        if (isDrawing && currentArrow) {
+            const [x1, y1, x2, y2] = currentArrow.points;
+            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            if (distance > 10) {
+                setShapes(prev => [...prev, currentArrow]);
+                setSelectedId(currentArrow.id);
+            }
+            setIsDrawing(false);
+            setDrawStart(null);
+            setCurrentArrow(null);
             setTool("select");
         }
     };
@@ -235,11 +279,27 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     const handleDragEnd = (id: string, e: Konva.KonvaEventObject<DragEvent>) => {
-        setShapes(prev => prev.map(shape =>
-            shape.id === id
-                ? { ...shape, x: e.target.x(), y: e.target.y() }
-                : shape
-        ));
+        const node = e.target;
+        const deltaX = node.x();
+        const deltaY = node.y();
+
+        setShapes(prev => prev.map(shape => {
+            if (shape.id !== id) return shape;
+
+            if (shape.type === "arrow") {
+                // Update arrow points based on drag delta
+                const [x1, y1, x2, y2] = shape.points;
+                return {
+                    ...shape,
+                    points: [x1 + deltaX, y1 + deltaY, x2 + deltaX, y2 + deltaY],
+                };
+            } else {
+                return { ...shape, x: deltaX, y: deltaY };
+            }
+        }));
+
+        // Reset node position since we've updated the shape's position
+        node.position({ x: 0, y: 0 });
     };
 
     const handleTransformEnd = (id: string, node: Konva.Node) => {
@@ -389,6 +449,15 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                         </Button>
                         <Button
                             size="sm"
+                            variant={tool === "arrow" ? "default" : "outline"}
+                            onClick={() => setTool("arrow")}
+                            className="gap-2"
+                        >
+                            <MoveRight className="h-4 w-4" />
+                            Arrow
+                        </Button>
+                        <Button
+                            size="sm"
                             variant={tool === "text" ? "default" : "outline"}
                             onClick={() => setTool("text")}
                             className="gap-2"
@@ -476,6 +545,22 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                                                 onTransformEnd={(e) => handleTransformEnd(shape.id, e.target)}
                                             />
                                         );
+                                    } else if (shape.type === "arrow") {
+                                        return (
+                                            <Arrow
+                                                key={shape.id}
+                                                id={shape.id}
+                                                points={shape.points}
+                                                stroke={shape.stroke}
+                                                strokeWidth={3}
+                                                fill={shape.stroke}
+                                                pointerLength={shape.pointerLength}
+                                                pointerWidth={shape.pointerWidth}
+                                                draggable={tool === "select"}
+                                                onClick={() => handleShapeClick(shape.id)}
+                                                onDragEnd={(e) => handleDragEnd(shape.id, e)}
+                                            />
+                                        );
                                     } else if (shape.type === "text") {
                                         // Don't render text that's currently being edited
                                         if (editingText && editingText.id === shape.id) {
@@ -511,6 +596,17 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                                         height={currentRect.height}
                                         stroke={currentRect.stroke}
                                         strokeWidth={3}
+                                    />
+                                )}
+
+                                {currentArrow && (
+                                    <Arrow
+                                        points={currentArrow.points}
+                                        stroke={currentArrow.stroke}
+                                        strokeWidth={3}
+                                        fill={currentArrow.stroke}
+                                        pointerLength={currentArrow.pointerLength}
+                                        pointerWidth={currentArrow.pointerWidth}
                                     />
                                 )}
 
