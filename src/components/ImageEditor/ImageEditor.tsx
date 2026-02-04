@@ -233,7 +233,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 throw new Error("Failed to generate image");
             }
 
-            await uploadImageToSftp(dataUrl, () => onSave(dataUrl));
+            await uploadImageToSftp(dataUrl, () => { });
         } catch (error) {
             // Error handling is done in the service
         } finally {

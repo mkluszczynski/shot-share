@@ -138,7 +138,6 @@ function App() {
 
   async function handleEditorSave(editedImageDataUrl: string) {
     try {
-      setCroppedImageDataUrl(null);
 
       const base64Data = editedImageDataUrl.replace(/^data:image\/png;base64,/, '');
       const savePath = `/tmp/screenshot-${Date.now()}.png`;
@@ -147,6 +146,12 @@ function App() {
         base64Data,
         savePath
       });
+
+      const window = getCurrentWindow();
+      await window.setFullscreen(false);
+      await window.hide();
+      setCroppedImageDataUrl(null);
+
     } catch (error) {
       console.error("Save error:", error);
     }
