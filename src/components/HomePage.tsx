@@ -1,60 +1,14 @@
-import { Keyboard, Image, Upload, Zap, Target, Sparkles } from "lucide-react";
-import { Button } from "./ui/button";
-import { invoke } from "@tauri-apps/api/core";
-
 interface HomePageProps {
-    onTakeScreenshot: () => void;
 }
 
-export function HomePage({ onTakeScreenshot }: HomePageProps) {
-    async function handleHideToTray() {
-        try {
-            await invoke("hide_main_window");
-        } catch (error) {
-            console.error("Failed to hide window:", error);
-        }
-    }
+export function HomePage({ }: HomePageProps) {
 
-    const features = [
-        {
-            id: "global-shortcuts",
-            icon: Keyboard,
-            title: "Global Shortcuts",
-            description: "Instant capture from anywhere with customizable hotkeys",
-            color: "from-cyan-500/10 to-blue-500/10 border-cyan-500/20"
-        },
-        {
-            id: "precision-editor",
-            icon: Target,
-            title: "Precision Editor",
-            description: "Annotate with shapes, text, arrows, blur, and numbered steps",
-            color: "from-purple-500/10 to-pink-500/10 border-purple-500/20"
-        },
-        {
-            id: "sftp-upload",
-            icon: Upload,
-            title: "SFTP Upload",
-            description: "Auto-upload to your server with shareable links",
-            color: "from-green-500/10 to-emerald-500/10 border-green-500/20"
-        },
-        {
-            id: "customizable",
-            icon: Sparkles,
-            title: "Customizable",
-            description: "Configure paths, shortcuts, and upload settings",
-            color: "from-orange-500/10 to-amber-500/10 border-orange-500/20"
-        }
-    ];
 
     return (
         <div className="flex-1 overflow-y-auto">
             <div className="max-w-5xl mx-auto p-8 space-y-8">
                 {/* Hero Section */}
                 <div className="space-y-6 animate-fade-in">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                        <Zap className="h-3 w-3 text-primary" />
-                        <span className="text-xs font-mono text-primary">Lightning Fast Screenshots</span>
-                    </div>
 
                     <div className="space-y-3">
                         <h1 className="text-5xl font-bold text-foreground tracking-tight">
@@ -62,58 +16,11 @@ export function HomePage({ onTakeScreenshot }: HomePageProps) {
                             <span className="text-primary">Edit.</span> Share.
                         </h1>
                         <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-                            Professional screenshot tool with built-in editing and instant SFTP upload.
-                            Streamline your workflow.
+                            Simple screenshot tool with built-in editing and SFTP upload.
                         </p>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="flex gap-3 pt-2">
-                        <Button
-                            onClick={onTakeScreenshot}
-                            size="lg"
-                            className="h-12 px-6 text-base gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30 hover:scale-105"
-                        >
-                            <Image className="h-5 w-5" />
-                            Take Screenshot
-                        </Button>
-                        <Button
-                            onClick={handleHideToTray}
-                            variant="outline"
-                            size="lg"
-                            className="h-12 px-6 text-base border-border hover:bg-secondary hover:border-primary/30 transition-all"
-                        >
-                            Hide to Tray
-                        </Button>
-                    </div>
-                </div>
 
-                {/* Features Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    {features.map((feature, index) => {
-                        const Icon = feature.icon;
-                        return (
-                            <div
-                                key={feature.id}
-                                style={{ animationDelay: `${index * 100}ms` }}
-                                className={`group p-5 rounded-xl bg-gradient-to-br ${feature.color} border backdrop-blur-sm hover:scale-[1.02] transition-all duration-300 animate-slide-up`}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2.5 bg-card/50 rounded-lg border border-border/50 group-hover:border-primary/30 transition-colors">
-                                        <Icon className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <h3 className="font-semibold text-foreground">
-                                            {feature.title}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                            {feature.description}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
                 </div>
 
                 {/* Quick Start Guide */}

@@ -41,7 +41,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                         Shot<span className="text-primary">Share</span>
                     </h2>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono ml-10">v1.0.0</p>
+                <p className="text-xs text-muted-foreground font-mono ml-10">v0.0.1</p>
             </div>
 
             <nav className="flex-1 p-3 space-y-1">
@@ -74,20 +74,6 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                 })}
             </nav>
 
-            <div className="relative z-10 p-4 border-t border-border/50">
-                <div className="text-center space-y-1">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono">
-                        Quick Capture
-                    </p>
-                    <div className="flex items-center justify-center gap-1 text-xs font-mono text-primary bg-primary/5 rounded px-2 py-1 border border-primary/20">
-                        <span className="opacity-60">Ctrl</span>
-                        <span className="opacity-40">+</span>
-                        <span className="opacity-60">Shift</span>
-                        <span className="opacity-40">+</span>
-                        <span className="opacity-60">S</span>
-                    </div>
-                </div>
-            </div>
         </aside>
     );
 }
