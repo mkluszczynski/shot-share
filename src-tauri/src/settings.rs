@@ -13,8 +13,6 @@ pub struct SftpConfig {
     pub username: String,
     #[serde(default)]
     pub password: String,
-    #[serde(default)]
-    pub use_ssh_key: bool, // If true, use SSH agent authentication instead of password
     pub remote_path: String,
     #[serde(default = "default_base_url")]
     pub base_url: String,
@@ -37,7 +35,6 @@ impl Default for SftpConfig {
             port: 22,
             username: String::new(),
             password: String::new(),
-            use_ssh_key: false,
             remote_path: String::from("/uploads"),
             base_url: String::from("https://example.com"),
             copy_to_clipboard: true,

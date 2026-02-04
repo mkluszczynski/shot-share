@@ -38,7 +38,6 @@ export async function uploadImageToSftp(
             port: settings.sftp.port,
             username: settings.sftp.username,
             password: settings.sftp.password,
-            useSshKey: settings.sftp.use_ssh_key,
             remotePath: settings.sftp.remote_path,
         });
 

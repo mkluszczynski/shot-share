@@ -12,7 +12,6 @@ export function SftpSettings() {
     const [sftpPort, setSftpPort] = useState(22);
     const [sftpUsername, setSftpUsername] = useState("");
     const [sftpPassword, setSftpPassword] = useState("");
-    const [useSshKey, setUseSshKey] = useState(false);
     const [sftpRemotePath, setSftpRemotePath] = useState("");
     const [sftpBaseUrl, setSftpBaseUrl] = useState("");
     const [copyToClipboard, setCopyToClipboard] = useState(true);
@@ -33,7 +32,6 @@ export function SftpSettings() {
             setSftpPort(loadedSettings.sftp.port);
             setSftpUsername(loadedSettings.sftp.username);
             setSftpPassword("");
-            setUseSshKey(loadedSettings.sftp.use_ssh_key || false);
             setHasExistingPassword(loadedSettings.sftp.password.length > 0);
             setSftpRemotePath(loadedSettings.sftp.remote_path);
             setSftpBaseUrl(loadedSettings.sftp.base_url);
@@ -54,7 +52,6 @@ export function SftpSettings() {
                 port: sftpPort,
                 username: sftpUsername,
                 password: sftpPassword,
-                useSshKey: useSshKey,
             });
             toast.success("Connection successful!", {
                 description: result,
@@ -81,7 +78,6 @@ export function SftpSettings() {
                     port: sftpPort,
                     username: sftpUsername,
                     password: "",
-                    use_ssh_key: useSshKey,
                     remote_path: sftpRemotePath,
                     base_url: sftpBaseUrl,
                     copy_to_clipboard: copyToClipboard,
@@ -155,41 +151,26 @@ export function SftpSettings() {
                         />
                     </div>
 
-                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-background/30 border border-border/30 hover:border-primary/30 transition-all">
-                        <input
-                            id="useSshKey"
-                            type="checkbox"
-                            checked={useSshKey}
-                            onChange={(e) => setUseSshKey(e.target.checked)}
-                            className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+                    <div className="space-y-3">
+                        <Label htmlFor="sftpPassword" className="text-sm font-medium text-foreground">Password</Label>
+                        <Input
+                            id="sftpPassword"
+                            type="password"
+                            value={sftpPassword}
+                            onChange={(e) => setSftpPassword(e.target.value)}
+                            placeholder={
+                                hasExistingPassword
+                                    ? "🔒 (password saved - leave blank to keep)"
+                                    : "Enter password"
+                            }
+                            className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
                         />
-                        <Label htmlFor="useSshKey" className="cursor-pointer text-sm text-foreground">
-                            Use SSH key authentication (instead of password)
-                        </Label>
+                        {hasExistingPassword && (
+                            <p className="text-xs text-primary/70 leading-relaxed">
+                                ✓ Password saved. Leave blank to keep existing password
+                            </p>
+                        )}
                     </div>
-
-                    {!useSshKey && (
-                        <div className="space-y-3">
-                            <Label htmlFor="sftpPassword" className="text-sm font-medium text-foreground">Password</Label>
-                            <Input
-                                id="sftpPassword"
-                                type="password"
-                                value={sftpPassword}
-                                onChange={(e) => setSftpPassword(e.target.value)}
-                                placeholder={
-                                    hasExistingPassword
-                                        ? "🔒 (password saved - leave blank to keep)"
-                                        : "Enter password"
-                                }
-                                className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
-                            />
-                            {hasExistingPassword && (
-                                <p className="text-xs text-primary/70 leading-relaxed">
-                                    ✓ Password saved. Leave blank to keep existing password
-                                </p>
-                            )}
-                        </div>
-                    )}
 
                     <div className="h-px bg-border/50" />
 

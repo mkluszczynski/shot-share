@@ -82,7 +82,7 @@ impl SftpUploader {
             .handshake()
             .map_err(|e| SftpError::ConnectionFailed(format!("SSH handshake failed: {}", e)))?;
 
-        // Authenticate
+        // Authenticate with password
         if let Some(ref password) = self.password {
             session
                 .userauth_password(&self.username, password)
@@ -93,12 +93,9 @@ impl SftpUploader {
                     ))
                 })?;
         } else {
-            session.userauth_agent(&self.username).map_err(|e| {
-                SftpError::AuthenticationFailed(format!(
-                    "SSH agent authentication failed for user '{}': {}",
-                    self.username, e
-                ))
-            })?;
+            return Err(SftpError::AuthenticationFailed(
+                "Password is required for authentication".to_string(),
+            ));
         }
 
         if !session.authenticated() {
@@ -143,7 +140,7 @@ impl SftpUploader {
             .handshake()
             .map_err(|e| SftpError::ConnectionFailed(format!("SSH handshake failed: {}", e)))?;
 
-        // Authenticate
+        // Authenticate with password
         if let Some(ref password) = self.password {
             session
                 .userauth_password(&self.username, password)
@@ -154,12 +151,9 @@ impl SftpUploader {
                     ))
                 })?;
         } else {
-            session.userauth_agent(&self.username).map_err(|e| {
-                SftpError::AuthenticationFailed(format!(
-                    "SSH agent authentication failed for user '{}': {}",
-                    self.username, e
-                ))
-            })?;
+            return Err(SftpError::AuthenticationFailed(
+                "Password is required for authentication".to_string(),
+            ));
         }
 
         if !session.authenticated() {

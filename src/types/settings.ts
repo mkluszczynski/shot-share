@@ -3,7 +3,6 @@ export interface SftpConfig {
     port: number;
     username: string;
     password: string;
-    use_ssh_key: boolean;
     remote_path: string;
     base_url: string;
     copy_to_clipboard: boolean;

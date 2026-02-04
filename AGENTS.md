@@ -204,7 +204,7 @@ Desktop screenshot application that operates in the background, captures screens
 - **main.rs** - Entry point, calls `shot_share_lib::run()`
 - **lib.rs** - Main application logic with Tauri commands and event handlers
 - **settings.rs** - Settings management with JSON file storage and OS keyring integration
-- **sftp.rs** - SFTP uploader with SSH2 library, supports password and SSH key authentication
+- **sftp.rs** - SFTP uploader with SSH2 library, supports password authentication
 
 #### System Tray Implementation
 - Built with `tauri-plugin-tray-icon`
@@ -226,7 +226,7 @@ Desktop screenshot application that operates in the background, captures screens
 #### Settings Storage
 - Settings saved to JSON file in user's config directory
 - SFTP passwords stored securely in OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service)
-- Settings interface: save directory, screenshot shortcut, SFTP config (host, port, username, password, SSH key option, remote path, base URL, clipboard option)
+- Settings interface: save directory, screenshot shortcut, SFTP config (host, port, username, password, remote path, base URL, clipboard option)
 
 #### Image Editor Tools
 - **Select** - Default tool for selecting and moving shapes
@@ -238,7 +238,6 @@ Desktop screenshot application that operates in the background, captures screens
 
 ### Security
 - SFTP passwords stored in OS keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service)
-- SSH key authentication supported as alternative to passwords
 - File paths validated before operations
 - Connection timeouts prevent hanging (10 second timeout)
 - Credentials never logged or exposed in error messages
