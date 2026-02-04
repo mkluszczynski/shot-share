@@ -173,13 +173,13 @@ function App() {
   function renderMainContent() {
     switch (currentView) {
       case "home":
-        return <HomePage onTakeScreenshot={startScreenshot} />;
+        return <HomePage />;
       case "general":
         return <GeneralSettings />;
       case "sftp":
         return <SftpSettings />;
       default:
-        return <HomePage onTakeScreenshot={startScreenshot} />;
+        return <HomePage />;
     }
   }
 
