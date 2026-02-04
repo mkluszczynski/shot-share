@@ -1,4 +1,4 @@
-import { Home, PictureInPicture2, Settings, Upload, Zap } from "lucide-react";
+import { Home, PictureInPicture2, Settings, Upload } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export type NavigationItem = "home" | "general" | "sftp";
