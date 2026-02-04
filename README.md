@@ -2,7 +2,7 @@
 
 # Shot Share 📸
 
-A cross-platform screenshot tool with image editing and SFTP upload. Built with Tauri, React, and TypeScript.
+Simple screenshot tool with SFTP upload feature.
 
 ## Features
 
