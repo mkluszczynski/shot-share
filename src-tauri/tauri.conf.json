@@ -20,12 +20,6 @@
     ],
     "security": {
       "csp": null
-    },
-    "trayIcon": {
-      "id": "main-tray",
-      "iconPath": "icons/developer-art/tray.png",
-      "menuOnLeftClick": false,
-      "iconAsTemplate": true
     }
   },
   "bundle": {
