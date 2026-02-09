@@ -1,11 +1,12 @@
 use base64::{engine::general_purpose, Engine as _};
 use std::io::Cursor;
 use std::path::PathBuf;
+use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
-use xcap::image::GenericImageView;
+use xcap::image::{GenericImageView, ImageReader};
 use xcap::Monitor;
 
 mod settings;
@@ -331,9 +332,18 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         ],
     )?;
 
+    // Load high-resolution tray icon (embedded at compile time)
+    let icon_bytes = include_bytes!("../icons/developer-art/tray.png");
+    let img = ImageReader::new(Cursor::new(icon_bytes))
+        .with_guessed_format()?
+        .decode()?;
+    let (width, height) = img.dimensions();
+    let rgba = img.to_rgba8().into_raw();
+    let icon = Image::new_owned(rgba, width, height);
+
     let _ = TrayIconBuilder::with_id("main-tray")
         .menu(&menu)
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(icon)
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "take-screenshot" => {
                 let _ = app.emit("show-region-selector", ());
