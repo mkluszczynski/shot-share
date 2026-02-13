@@ -65,6 +65,12 @@ function App() {
     try {
       const window = getCurrentWindow();
 
+      // Reset editor state if currently open
+      if (croppedImageDataUrl) {
+        setCroppedImageDataUrl(null);
+        await window.setFullscreen(false);
+      }
+
       await window.hide();
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -91,6 +97,8 @@ function App() {
 
       setScreenshotDataUrl(null);
       const window = getCurrentWindow();
+      
+      // Exit fullscreen and wait for it to complete
       await window.setFullscreen(false);
 
       // Add padding to the window size (toolbar height + bottom padding)
@@ -194,7 +202,7 @@ function App() {
         />
       )}
 
-      {croppedImageDataUrl && (
+      {croppedImageDataUrl && !screenshotDataUrl && (
         <ImageEditor
           imageDataUrl={croppedImageDataUrl}
           onSave={handleEditorSave}
