@@ -210,7 +210,7 @@ function App() {
         </div>
       )}
 
-      <Toaster position="bottom-right" richColors closeButton />
+      <Toaster position="top-right" richColors closeButton />
     </>
   );
 }
