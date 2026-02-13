@@ -5,6 +5,7 @@ use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use xcap::image::{GenericImageView, ImageReader};
 use xcap::Monitor;
@@ -307,6 +308,40 @@ fn unregister_escape_shortcut(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn copy_image_to_clipboard(app: AppHandle, data_url: String) -> Result<(), String> {
+    // Extract base64 data from data URL (format: "data:image/png;base64,...")
+    let base64_data = data_url
+        .split(',')
+        .nth(1)
+        .ok_or("Invalid data URL format")?;
+
+    // Decode base64 to bytes
+    let image_bytes = general_purpose::STANDARD
+        .decode(base64_data)
+        .map_err(|e| format!("Failed to decode base64: {}", e))?;
+
+    // Load image to get dimensions
+    let img = ImageReader::new(Cursor::new(&image_bytes))
+        .with_guessed_format()
+        .map_err(|e| format!("Failed to read image format: {}", e))?
+        .decode()
+        .map_err(|e| format!("Failed to decode image: {}", e))?;
+
+    let (width, height) = img.dimensions();
+    let rgba = img.to_rgba8().into_raw();
+
+    // Create Tauri Image
+    let image = Image::new_owned(rgba, width, height);
+
+    // Write to clipboard using the plugin
+    app.clipboard()
+        .write_image(&image)
+        .map_err(|e| format!("Failed to write image to clipboard: {}", e))?;
+
+    Ok(())
+}
+
 fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let take_screenshot_i = MenuItem::with_id(
         app,
@@ -456,7 +491,8 @@ pub fn run() {
             hide_main_window,
             register_shortcut,
             register_escape_shortcut,
-            unregister_escape_shortcut
+            unregister_escape_shortcut,
+            copy_image_to_clipboard
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

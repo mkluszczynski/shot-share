@@ -8,6 +8,9 @@ import { useShapeSelection } from "../../hooks/useShapeSelection";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useHistory } from "../../hooks/useHistory";
 import { uploadImageToSftp } from "../../services/uploadService";
+import { copyImageToClipboard } from "../../services/clipboardService";
+import { saveEditedImage } from "../../services/saveService";
+import { getCanvasDataUrl, waitForRender } from "../../services/imageUtils";
 import { EditorToolbar } from "./EditorToolbar";
 import { ShapeRenderer } from "./ShapeRenderer";
 import { TextEditorOverlay } from "./TextEditorOverlay";
@@ -26,6 +29,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     const [tool, setTool] = useState<Tool>("select");
     const [color, setColor] = useState("#ef4444");
     const [uploading, setUploading] = useState(false);
+    const [copying, setCopying] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     // History management for undo/redo
     const { shapes, setShapes, undo, redo, canUndo, canRedo } = useHistory([]);
@@ -221,18 +226,12 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     const handleUpload = async () => {
-        if (!stageRef.current) return;
-
         try {
             setUploading(true);
             clearSelection();
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await waitForRender();
 
-            const dataUrl = stageRef.current.toDataURL();
-            if (!dataUrl) {
-                throw new Error("Failed to generate image");
-            }
-
+            const dataUrl = getCanvasDataUrl(stageRef.current);
             await uploadImageToSftp(dataUrl, () => { });
         } catch (error) {
             // Error handling is done in the service
@@ -241,14 +240,34 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         }
     };
 
-    const handleSave = () => {
-        if (!stageRef.current) return;
+    const handleCopy = async () => {
+        try {
+            setCopying(true);
+            clearSelection();
+            await waitForRender();
 
-        clearSelection();
-        setTimeout(() => {
-            const dataUrl = stageRef.current?.toDataURL();
-            if (dataUrl) onSave(dataUrl);
-        }, 50);
+            const dataUrl = getCanvasDataUrl(stageRef.current);
+            await copyImageToClipboard(dataUrl);
+        } catch (error) {
+            // Error handling is done in the service
+        } finally {
+            setCopying(false);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            clearSelection();
+            await waitForRender();
+
+            const dataUrl = getCanvasDataUrl(stageRef.current);
+            await saveEditedImage(dataUrl, onSave);
+        } catch (error) {
+            // Error handling is done in the service
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -314,11 +333,14 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 color={color}
                 selectedId={selectedId}
                 uploading={uploading}
+                copying={copying}
+                saving={saving}
                 canUndo={canUndo}
                 canRedo={canRedo}
                 onToolChange={setTool}
                 onColorChange={setColor}
                 onUpload={handleUpload}
+                onCopy={handleCopy}
                 onSave={handleSave}
                 onCancel={onCancel}
                 onUndo={undo}

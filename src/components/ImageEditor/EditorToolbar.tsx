@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered, Blend, Undo2, Redo2, X, Save } from "lucide-react";
+import { Square, Type, MousePointer2, Upload, MoveRight, ListOrdered, Blend, Undo2, Redo2, X, Save, Copy } from "lucide-react";
 import type { Tool } from "../../types/editor";
 
 interface EditorToolbarProps {
@@ -7,11 +7,14 @@ interface EditorToolbarProps {
     color: string;
     selectedId: string | null;
     uploading: boolean;
+    copying: boolean;
+    saving: boolean;
     canUndo: boolean;
     canRedo: boolean;
     onToolChange: (tool: Tool) => void;
     onColorChange: (color: string) => void;
     onUpload: () => void;
+    onCopy: () => void;
     onSave: () => void;
     onCancel: () => void;
     onUndo: () => void;
@@ -23,11 +26,14 @@ export function EditorToolbar({
     color,
     selectedId,
     uploading,
+    copying,
+    saving,
     canUndo,
     canRedo,
     onToolChange,
     onColorChange,
     onUpload,
+    onCopy,
     onSave,
     onCancel,
     onUndo,
@@ -85,7 +91,7 @@ export function EditorToolbar({
                                 title={`${t.label} (${t.shortcut})`}
                             >
                                 {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 rounded-lg animate-glow" />
+                                    <div className="absolute inset-0 bg-linear-to-r from-primary to-primary/80 rounded-lg animate-glow" />
                                 )}
                                 <Icon className={`h-4 w-4 relative z-10 ${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`} />
                             </button>
@@ -116,6 +122,7 @@ export function EditorToolbar({
                         size="sm"
                         variant="ghost"
                         onClick={onCancel}
+                        disabled={uploading || copying || saving}
                         className="h-9 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                     >
                         <X className="h-4 w-4" />
@@ -124,8 +131,18 @@ export function EditorToolbar({
                     <Button
                         size="sm"
                         variant="outline"
+                        onClick={onCopy}
+                        disabled={copying || uploading || saving}
+                        className="h-9 gap-1.5 border-border/50 hover:border-primary/50 hover:bg-primary/5"
+                    >
+                        <Copy className="h-4 w-4" />
+                        {copying ? "Copying..." : "Copy"}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
                         onClick={onUpload}
-                        disabled={uploading}
+                        disabled={uploading || copying || saving}
                         className="h-9 gap-1.5 border-border/50 hover:border-primary/50 hover:bg-primary/5"
                     >
                         <Upload className="h-4 w-4" />
@@ -134,10 +151,11 @@ export function EditorToolbar({
                     <Button
                         size="sm"
                         onClick={onSave}
+                        disabled={saving || uploading || copying}
                         className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                     >
                         <Save className="h-4 w-4" />
-                        Save
+                        {saving ? "Saving..." : "Save"}
                     </Button>
                 </div>
 

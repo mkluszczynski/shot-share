@@ -17,6 +17,7 @@
     "core:window:allow-set-size",
     "core:window:allow-center",
     "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-write-image",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
