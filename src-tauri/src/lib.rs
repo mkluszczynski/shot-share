@@ -70,6 +70,13 @@ fn capture_screenshot(
     };
 
     let path = PathBuf::from(&save_path);
+    
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directory '{}': {}", parent.display(), e))?;
+    }
+    
     cropped
         .save(&path)
         .map_err(|e| format!("Failed to save screenshot: {}", e))?;
@@ -84,6 +91,13 @@ fn save_base64_image(base64_data: String, save_path: String) -> Result<String, S
         .map_err(|e| format!("Failed to decode base64: {}", e))?;
 
     let path = PathBuf::from(&save_path);
+    
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directory '{}': {}", parent.display(), e))?;
+    }
+    
     std::fs::write(&path, image_data).map_err(|e| format!("Failed to save image: {}", e))?;
 
     Ok(save_path)
