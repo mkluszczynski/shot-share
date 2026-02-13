@@ -7,6 +7,8 @@ interface EditorToolbarProps {
     color: string;
     selectedId: string | null;
     uploading: boolean;
+    copying: boolean;
+    saving: boolean;
     canUndo: boolean;
     canRedo: boolean;
     onToolChange: (tool: Tool) => void;
@@ -24,6 +26,8 @@ export function EditorToolbar({
     color,
     selectedId,
     uploading,
+    copying,
+    saving,
     canUndo,
     canRedo,
     onToolChange,
@@ -118,6 +122,7 @@ export function EditorToolbar({
                         size="sm"
                         variant="ghost"
                         onClick={onCancel}
+                        disabled={uploading || copying || saving}
                         className="h-9 gap-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                     >
                         <X className="h-4 w-4" />
@@ -127,16 +132,17 @@ export function EditorToolbar({
                         size="sm"
                         variant="outline"
                         onClick={onCopy}
+                        disabled={copying || uploading || saving}
                         className="h-9 gap-1.5 border-border/50 hover:border-primary/50 hover:bg-primary/5"
                     >
                         <Copy className="h-4 w-4" />
-                        Copy
+                        {copying ? "Copying..." : "Copy"}
                     </Button>
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={onUpload}
-                        disabled={uploading}
+                        disabled={uploading || copying || saving}
                         className="h-9 gap-1.5 border-border/50 hover:border-primary/50 hover:bg-primary/5"
                     >
                         <Upload className="h-4 w-4" />
@@ -145,10 +151,11 @@ export function EditorToolbar({
                     <Button
                         size="sm"
                         onClick={onSave}
+                        disabled={saving || uploading || copying}
                         className="h-9 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                     >
                         <Save className="h-4 w-4" />
-                        Save
+                        {saving ? "Saving..." : "Save"}
                     </Button>
                 </div>
 

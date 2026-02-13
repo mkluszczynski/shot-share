@@ -1,8 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { Stage, Layer, Image as KonvaImage, Transformer } from "react-konva";
 import Konva from "konva";
-import { invoke } from "@tauri-apps/api/core";
-import { toast } from "sonner";
 import type { Tool, ShapeType } from "../../types/editor";
 import { useDrawing } from "../../hooks/useDrawing";
 import { useTextEditing } from "../../hooks/useTextEditing";
@@ -10,6 +8,9 @@ import { useShapeSelection } from "../../hooks/useShapeSelection";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useHistory } from "../../hooks/useHistory";
 import { uploadImageToSftp } from "../../services/uploadService";
+import { copyImageToClipboard } from "../../services/clipboardService";
+import { saveEditedImage } from "../../services/saveService";
+import { getCanvasDataUrl, waitForRender } from "../../services/imageUtils";
 import { EditorToolbar } from "./EditorToolbar";
 import { ShapeRenderer } from "./ShapeRenderer";
 import { TextEditorOverlay } from "./TextEditorOverlay";
@@ -28,6 +29,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     const [tool, setTool] = useState<Tool>("select");
     const [color, setColor] = useState("#ef4444");
     const [uploading, setUploading] = useState(false);
+    const [copying, setCopying] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     // History management for undo/redo
     const { shapes, setShapes, undo, redo, canUndo, canRedo } = useHistory([]);
@@ -223,18 +226,12 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     const handleUpload = async () => {
-        if (!stageRef.current) return;
-
         try {
             setUploading(true);
             clearSelection();
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await waitForRender();
 
-            const dataUrl = stageRef.current.toDataURL();
-            if (!dataUrl) {
-                throw new Error("Failed to generate image");
-            }
-
+            const dataUrl = getCanvasDataUrl(stageRef.current);
             await uploadImageToSftp(dataUrl, () => { });
         } catch (error) {
             // Error handling is done in the service
@@ -244,34 +241,33 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
     };
 
     const handleCopy = async () => {
-        if (!stageRef.current) return;
-
         try {
+            setCopying(true);
             clearSelection();
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await waitForRender();
 
-            const dataUrl = stageRef.current.toDataURL();
-            if (!dataUrl) {
-                toast.error("Failed to generate image");
-                return;
-            }
-
-            await invoke("copy_image_to_clipboard", { dataUrl });
-            toast.success("Image copied to clipboard");
+            const dataUrl = getCanvasDataUrl(stageRef.current);
+            await copyImageToClipboard(dataUrl);
         } catch (error) {
-            console.error("Copy error:", error);
-            toast.error(error instanceof Error ? error.message : "Failed to copy image");
+            // Error handling is done in the service
+        } finally {
+            setCopying(false);
         }
     };
 
-    const handleSave = () => {
-        if (!stageRef.current) return;
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            clearSelection();
+            await waitForRender();
 
-        clearSelection();
-        setTimeout(() => {
-            const dataUrl = stageRef.current?.toDataURL();
-            if (dataUrl) onSave(dataUrl);
-        }, 50);
+            const dataUrl = getCanvasDataUrl(stageRef.current);
+            await saveEditedImage(dataUrl, onSave);
+        } catch (error) {
+            // Error handling is done in the service
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -337,6 +333,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 color={color}
                 selectedId={selectedId}
                 uploading={uploading}
+                copying={copying}
+                saving={saving}
                 canUndo={canUndo}
                 canRedo={canRedo}
                 onToolChange={setTool}
