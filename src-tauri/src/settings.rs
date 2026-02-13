@@ -46,6 +46,8 @@ impl Default for SftpConfig {
 pub struct Settings {
     pub save_directory: String,
     pub screenshot_shortcut: String,
+    #[serde(default)]
+    pub filename_prefix: String,
     pub sftp: SftpConfig,
 }
 
@@ -58,6 +60,7 @@ impl Default for Settings {
                 .to_string_lossy()
                 .to_string(),
             screenshot_shortcut: String::from("CommandOrControl+Shift+S"),
+            filename_prefix: String::from(""),
             sftp: SftpConfig::default(),
         }
     }

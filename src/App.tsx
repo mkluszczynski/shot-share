@@ -146,9 +146,16 @@ function App() {
 
   async function handleEditorSave(editedImageDataUrl: string) {
     try {
-
+      // Load settings to get filename prefix
+      const settings = await invoke<Settings>("get_settings");
+      
       const base64Data = editedImageDataUrl.replace(/^data:image\/png;base64,/, '');
-      const savePath = `/tmp/screenshot-${Date.now()}.png`;
+      
+      // Generate filename with optional prefix
+      const timestamp = Date.now();
+      const prefix = settings.filename_prefix ? `${settings.filename_prefix}_` : '';
+      const filename = `${prefix}screenshot_${timestamp}.png`;
+      const savePath = `/tmp/${filename}`;
 
       await invoke("save_base64_image", {
         base64Data,
