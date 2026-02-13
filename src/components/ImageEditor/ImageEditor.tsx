@@ -89,8 +89,14 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
             }
         },
         onEscape: () => {
-            setTool("select");
-            clearSelection();
+            // If a shape is selected, deselect it first
+            if (selectedId) {
+                setTool("select");
+                clearSelection();
+            } else {
+                // If nothing is selected, close the editor
+                onCancel();
+            }
         },
         onUndo: undo,
         onRedo: redo,
