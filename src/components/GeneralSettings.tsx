@@ -11,6 +11,7 @@ export function GeneralSettings() {
     const [settings, setSettings] = useState<SettingsType | null>(null);
     const [saveDirectory, setSaveDirectory] = useState("");
     const [screenshotShortcut, setScreenshotShortcut] = useState("");
+    const [filenamePrefix, setFilenamePrefix] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [isCapturingShortcut, setIsCapturingShortcut] = useState(false);
 
@@ -24,6 +25,7 @@ export function GeneralSettings() {
             setSettings(loadedSettings);
             setSaveDirectory(loadedSettings.save_directory);
             setScreenshotShortcut(loadedSettings.screenshot_shortcut);
+            setFilenamePrefix(loadedSettings.filename_prefix || "");
         } catch (error) {
             console.error("Failed to load settings:", error);
             toast.error("Failed to load settings", {
@@ -97,6 +99,7 @@ export function GeneralSettings() {
                 ...settings,
                 save_directory: saveDirectory,
                 screenshot_shortcut: screenshotShortcut,
+                filename_prefix: filenamePrefix,
             };
 
             await invoke("update_settings", {
@@ -185,6 +188,24 @@ export function GeneralSettings() {
                         />
                         <p className="text-xs text-muted-foreground leading-relaxed">
                             Click the field and press your desired key combination (e.g., Ctrl+Shift+S)
+                        </p>
+                    </div>
+
+                    <div className="h-px bg-border/50" />
+
+                    <div className="space-y-3">
+                        <Label htmlFor="filenamePrefix" className="text-sm font-medium text-foreground">
+                            Filename Prefix
+                        </Label>
+                        <Input
+                            id="filenamePrefix"
+                            value={filenamePrefix}
+                            onChange={(e) => setFilenamePrefix(e.target.value)}
+                            placeholder="e.g., my_project"
+                            className="font-mono text-sm bg-background/50 border-border/50 focus:border-primary transition-all"
+                        />
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Optional prefix for screenshot filenames (e.g., "my_prefix" → "my_prefix_screenshot_2024-01-01.png")
                         </p>
                     </div>
 

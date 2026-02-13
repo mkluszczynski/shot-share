@@ -16,9 +16,10 @@ export async function uploadImageToSftp(
             throw new Error("SFTP not configured. Please configure SFTP settings in Settings.");
         }
 
-        // Generate filename with timestamp
+        // Generate filename with optional prefix and timestamp
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const filename = `screenshot-${timestamp}.png`;
+        const prefix = settings.filename_prefix ? `${settings.filename_prefix}_` : '';
+        const filename = `${prefix}screenshot_${timestamp}.png`;
 
         // Save the image temporarily
         const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");

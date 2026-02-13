@@ -11,5 +11,6 @@ export interface SftpConfig {
 export interface Settings {
     save_directory: string;
     screenshot_shortcut: string;
+    filename_prefix: string;
     sftp: SftpConfig;
 }
