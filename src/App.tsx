@@ -104,7 +104,7 @@ function App() {
       // Add padding to the window size (toolbar height + bottom padding)
       const TOOLBAR_HEIGHT = 60; // Height of the editor toolbar
       const PADDING = 100; // Extra padding around the image
-      const MIN_WIDTH = 720; // Minimum window width
+      const MIN_WIDTH = 820; // Minimum window width
       const MIN_HEIGHT = 460; // Minimum window height
 
       const newWidth = Math.max(width + PADDING, MIN_WIDTH);

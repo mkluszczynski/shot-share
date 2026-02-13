@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState } from "react";
 import { Stage, Layer, Image as KonvaImage, Transformer } from "react-konva";
 import Konva from "konva";
+import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
 import type { Tool, ShapeType } from "../../types/editor";
 import { useDrawing } from "../../hooks/useDrawing";
 import { useTextEditing } from "../../hooks/useTextEditing";
@@ -241,6 +243,27 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         }
     };
 
+    const handleCopy = async () => {
+        if (!stageRef.current) return;
+
+        try {
+            clearSelection();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const dataUrl = stageRef.current.toDataURL();
+            if (!dataUrl) {
+                toast.error("Failed to generate image");
+                return;
+            }
+
+            await invoke("copy_image_to_clipboard", { dataUrl });
+            toast.success("Image copied to clipboard");
+        } catch (error) {
+            console.error("Copy error:", error);
+            toast.error(error instanceof Error ? error.message : "Failed to copy image");
+        }
+    };
+
     const handleSave = () => {
         if (!stageRef.current) return;
 
@@ -319,6 +342,7 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
                 onToolChange={setTool}
                 onColorChange={setColor}
                 onUpload={handleUpload}
+                onCopy={handleCopy}
                 onSave={handleSave}
                 onCancel={onCancel}
                 onUndo={undo}
