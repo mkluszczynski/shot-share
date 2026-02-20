@@ -152,15 +152,22 @@ impl Settings {
     /// Ensure the save directory exists, creating it if necessary
     fn ensure_save_directory_exists(&self) -> Result<(), String> {
         let save_path = PathBuf::from(&self.save_directory);
-        
+
         if !save_path.exists() {
             println!("Creating save directory: {}", self.save_directory);
-            fs::create_dir_all(&save_path)
-                .map_err(|e| format!("Failed to create save directory '{}': {}", self.save_directory, e))?;
+            fs::create_dir_all(&save_path).map_err(|e| {
+                format!(
+                    "Failed to create save directory '{}': {}",
+                    self.save_directory, e
+                )
+            })?;
         } else if !save_path.is_dir() {
-            return Err(format!("Save path '{}' exists but is not a directory", self.save_directory));
+            return Err(format!(
+                "Save path '{}' exists but is not a directory",
+                self.save_directory
+            ));
         }
-        
+
         Ok(())
     }
 
