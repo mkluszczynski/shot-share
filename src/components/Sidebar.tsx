@@ -41,7 +41,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
                         Shot<span className="text-primary">Share</span>
                     </h2>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono ml-10">v0.0.1</p>
+                <p className="text-xs text-muted-foreground font-mono ml-10">v0.0.2</p>
             </div>
 
             <nav className="flex-1 p-3 space-y-1">
