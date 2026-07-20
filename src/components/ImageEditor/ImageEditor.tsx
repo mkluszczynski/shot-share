@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Stage, Layer, Image as KonvaImage, Transformer } from "react-konva";
 import Konva from "konva";
-import type { Tool, ShapeType } from "../../types/editor";
+import type { Tool, ShapeType, StepperShape } from "../../types/editor";
 import { useDrawing } from "../../hooks/useDrawing";
 import { useTextEditing } from "../../hooks/useTextEditing";
 import { useShapeSelection } from "../../hooks/useShapeSelection";
@@ -128,8 +128,8 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         if (tool === "stepper") {
             // Find the lowest available number
             const existingNumbers = shapes
-                .filter(s => s.type === "stepper")
-                .map(s => (s as any).number)
+                .filter((s): s is StepperShape => s.type === "stepper")
+                .map(s => s.number)
                 .sort((a, b) => a - b);
 
             let nextNumber = 1;
@@ -231,50 +231,27 @@ export function ImageEditor({ imageDataUrl, onSave, onCancel }: ImageEditorProps
         setShapes(updatedShapes);
     };
 
-    const handleUpload = async () => {
+    const runCanvasAction = async (
+        setBusy: (busy: boolean) => void,
+        serviceFn: (dataUrl: string) => Promise<void>,
+    ) => {
         try {
-            setUploading(true);
+            setBusy(true);
             clearSelection();
             await waitForRender();
 
             const dataUrl = getCanvasDataUrl(stageRef.current);
-            await uploadImageToSftp(dataUrl, () => { });
-        } catch (error) {
+            await serviceFn(dataUrl);
+        } catch {
             // Error handling is done in the service
         } finally {
-            setUploading(false);
+            setBusy(false);
         }
     };
 
-    const handleCopy = async () => {
-        try {
-            setCopying(true);
-            clearSelection();
-            await waitForRender();
-
-            const dataUrl = getCanvasDataUrl(stageRef.current);
-            await copyImageToClipboard(dataUrl);
-        } catch (error) {
-            // Error handling is done in the service
-        } finally {
-            setCopying(false);
-        }
-    };
-
-    const handleSave = async () => {
-        try {
-            setSaving(true);
-            clearSelection();
-            await waitForRender();
-
-            const dataUrl = getCanvasDataUrl(stageRef.current);
-            await saveEditedImage(dataUrl, onSave);
-        } catch (error) {
-            // Error handling is done in the service
-        } finally {
-            setSaving(false);
-        }
-    };
+    const handleUpload = () => runCanvasAction(setUploading, dataUrl => uploadImageToSftp(dataUrl, () => { }));
+    const handleCopy = () => runCanvasAction(setCopying, copyImageToClipboard);
+    const handleSave = () => runCanvasAction(setSaving, dataUrl => saveEditedImage(dataUrl, onSave));
 
     return (
         <div className="fixed inset-0 flex flex-col bg-background">

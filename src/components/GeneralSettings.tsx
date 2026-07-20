@@ -5,10 +5,11 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { useSettings } from "../hooks/useSettings";
 import type { Settings as SettingsType } from "../types/settings";
 
 export function GeneralSettings() {
-    const [settings, setSettings] = useState<SettingsType | null>(null);
+    const { settings, reload } = useSettings();
     const [saveDirectory, setSaveDirectory] = useState("");
     const [screenshotShortcut, setScreenshotShortcut] = useState("");
     const [filenamePrefix, setFilenamePrefix] = useState("");
@@ -16,23 +17,11 @@ export function GeneralSettings() {
     const [isCapturingShortcut, setIsCapturingShortcut] = useState(false);
 
     useEffect(() => {
-        loadSettings();
-    }, []);
-
-    async function loadSettings() {
-        try {
-            const loadedSettings = await invoke<SettingsType>("get_settings");
-            setSettings(loadedSettings);
-            setSaveDirectory(loadedSettings.save_directory);
-            setScreenshotShortcut(loadedSettings.screenshot_shortcut);
-            setFilenamePrefix(loadedSettings.filename_prefix || "");
-        } catch (error) {
-            console.error("Failed to load settings:", error);
-            toast.error("Failed to load settings", {
-                description: String(error),
-            });
-        }
-    }
+        if (!settings) return;
+        setSaveDirectory(settings.save_directory);
+        setScreenshotShortcut(settings.screenshot_shortcut);
+        setFilenamePrefix(settings.filename_prefix || "");
+    }, [settings]);
 
     async function handleBrowseDirectory() {
         try {
@@ -118,7 +107,7 @@ export function GeneralSettings() {
             }
 
             toast.success("General settings saved successfully");
-            await loadSettings();
+            await reload();
         } catch (error) {
             console.error("Failed to save settings:", error);
             toast.error("Failed to save settings", {

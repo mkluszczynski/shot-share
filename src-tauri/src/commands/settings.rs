@@ -11,7 +11,6 @@ pub fn update_settings(settings: Settings, password: Option<String>) -> Result<(
 
     if let Some(new_password) = password {
         if !new_password.is_empty() {
-            println!("New password provided (length: {})", new_password.len());
             settings_to_save.sftp.password = new_password;
         }
     }

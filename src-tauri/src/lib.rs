@@ -9,12 +9,35 @@ use commands::{
     upload_to_sftp, greet,
 };
 use setup::{setup_global_shortcuts, setup_tray};
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    // Registering a second instance (e.g. autostart + a manual launch) would
+    // otherwise race to register the same global shortcut; instead, focus the
+    // existing window. Must be registered before other plugins, and only
+    // applies on desktop targets.
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }));
+    }
+
+    // The updater plugin only supports desktop targets.
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
+    builder
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -28,7 +51,8 @@ pub fn run() {
             match event {
                 tauri::WindowEvent::CloseRequested { api, .. } => {
                     let _ = window.emit("window-close-requested", ());
-                    window.hide().unwrap();
+                    // Prevent the window from closing and hide it instead
+                    let _ = window.hide();
                     api.prevent_close();
                 }
                 tauri::WindowEvent::Focused(false) => {}

@@ -40,13 +40,6 @@ pub fn upload_to_sftp(
     password: String,
     remote_path: String,
 ) -> Result<String, String> {
-    println!(
-        "Upload SFTP - host: '{}', username: '{}', password length: {}",
-        host,
-        username,
-        password.len()
-    );
-
     if host.trim().is_empty() {
         return Err(
             "SFTP host is not configured. Please configure SFTP settings first.".to_string(),

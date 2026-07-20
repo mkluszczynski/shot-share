@@ -1,6 +1,6 @@
+use crate::services::validate_save_path;
 use base64::{engine::general_purpose, Engine as _};
 use std::io::Cursor;
-use std::path::PathBuf;
 use xcap::image::GenericImageView;
 use xcap::Monitor;
 
@@ -12,7 +12,10 @@ pub fn capture_full_screenshot() -> Result<String, String> {
         return Err("No monitors found".to_string());
     }
 
-    let primary_monitor = &monitors[0];
+    let primary_monitor = monitors
+        .iter()
+        .find(|m| m.is_primary())
+        .unwrap_or(&monitors[0]);
     let screenshot = primary_monitor
         .capture_image()
         .map_err(|e| format!("Failed to capture screenshot: {}", e))?;
@@ -40,7 +43,10 @@ pub fn capture_screenshot(
         return Err("No monitors found".to_string());
     }
 
-    let primary_monitor = &monitors[0];
+    let primary_monitor = monitors
+        .iter()
+        .find(|m| m.is_primary())
+        .unwrap_or(&monitors[0]);
     let screenshot = primary_monitor
         .capture_image()
         .map_err(|e| format!("Failed to capture screenshot: {}", e))?;
@@ -53,12 +59,7 @@ pub fn capture_screenshot(
         screenshot
     };
 
-    let path = PathBuf::from(&save_path);
-
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Failed to create directory '{}': {}", parent.display(), e))?;
-    }
+    let path = validate_save_path(&save_path)?;
 
     cropped
         .save(&path)
@@ -73,12 +74,7 @@ pub fn save_base64_image(base64_data: String, save_path: String) -> Result<Strin
         .decode(&base64_data)
         .map_err(|e| format!("Failed to decode base64: {}", e))?;
 
-    let path = PathBuf::from(&save_path);
-
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Failed to create directory '{}': {}", parent.display(), e))?;
-    }
+    let path = validate_save_path(&save_path)?;
 
     std::fs::write(&path, image_data).map_err(|e| format!("Failed to save image: {}", e))?;
 

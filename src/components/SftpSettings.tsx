@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { useSettings } from "../hooks/useSettings";
 import type { Settings as SettingsType } from "../types/settings";
 
 export function SftpSettings() {
-    const [settings, setSettings] = useState<SettingsType | null>(null);
+    const { settings, reload } = useSettings();
     const [sftpHost, setSftpHost] = useState("");
     const [sftpPort, setSftpPort] = useState(22);
     const [sftpUsername, setSftpUsername] = useState("");
@@ -20,29 +21,16 @@ export function SftpSettings() {
     const [hasExistingPassword, setHasExistingPassword] = useState(false);
 
     useEffect(() => {
-        loadSettings();
-    }, []);
-
-    async function loadSettings() {
-        try {
-            const loadedSettings = await invoke<SettingsType>("get_settings");
-
-            setSettings(loadedSettings);
-            setSftpHost(loadedSettings.sftp.host);
-            setSftpPort(loadedSettings.sftp.port);
-            setSftpUsername(loadedSettings.sftp.username);
-            setSftpPassword("");
-            setHasExistingPassword(loadedSettings.sftp.password.length > 0);
-            setSftpRemotePath(loadedSettings.sftp.remote_path);
-            setSftpBaseUrl(loadedSettings.sftp.base_url);
-            setCopyToClipboard(loadedSettings.sftp.copy_to_clipboard);
-        } catch (error) {
-            console.error("Failed to load settings:", error);
-            toast.error("Failed to load settings", {
-                description: String(error),
-            });
-        }
-    }
+        if (!settings) return;
+        setSftpHost(settings.sftp.host);
+        setSftpPort(settings.sftp.port);
+        setSftpUsername(settings.sftp.username);
+        setSftpPassword("");
+        setHasExistingPassword(settings.sftp.password.length > 0);
+        setSftpRemotePath(settings.sftp.remote_path);
+        setSftpBaseUrl(settings.sftp.base_url);
+        setCopyToClipboard(settings.sftp.copy_to_clipboard);
+    }, [settings]);
 
     async function handleTestConnection() {
         setIsTestingConnection(true);
@@ -90,7 +78,7 @@ export function SftpSettings() {
             });
 
             toast.success("SFTP settings saved successfully");
-            await loadSettings();
+            await reload();
         } catch (error) {
             console.error("Failed to save settings:", error);
             toast.error("Failed to save settings", {

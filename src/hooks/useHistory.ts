@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import type { ShapeType } from "../types/editor";
 
 interface HistoryState {
@@ -9,14 +9,8 @@ export function useHistory(initialShapes: ShapeType[] = []) {
     const [shapes, setShapes] = useState<ShapeType[]>(initialShapes);
     const [history, setHistory] = useState<HistoryState[]>([{ shapes: initialShapes }]);
     const [historyIndex, setHistoryIndex] = useState(0);
-    const isUndoRedoAction = useRef(false);
 
     const pushToHistory = useCallback((newShapes: ShapeType[]) => {
-        if (isUndoRedoAction.current) {
-            isUndoRedoAction.current = false;
-            return;
-        }
-
         setHistory(prev => {
             // Remove any "future" history beyond current index
             const newHistory = prev.slice(0, historyIndex + 1);
@@ -35,7 +29,6 @@ export function useHistory(initialShapes: ShapeType[] = []) {
 
     const undo = useCallback(() => {
         if (historyIndex > 0) {
-            isUndoRedoAction.current = true;
             const newIndex = historyIndex - 1;
             setHistoryIndex(newIndex);
             setShapes(history[newIndex].shapes);
@@ -44,7 +37,6 @@ export function useHistory(initialShapes: ShapeType[] = []) {
 
     const redo = useCallback(() => {
         if (historyIndex < history.length - 1) {
-            isUndoRedoAction.current = true;
             const newIndex = historyIndex + 1;
             setHistoryIndex(newIndex);
             setShapes(history[newIndex].shapes);

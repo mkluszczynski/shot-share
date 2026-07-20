@@ -8,6 +8,7 @@ import { Sidebar, type NavigationItem } from "./components/Sidebar";
 import { HomePage } from "./components/HomePage";
 import { GeneralSettings } from "./components/GeneralSettings";
 import { SftpSettings } from "./components/SftpSettings";
+import { checkForUpdates } from "./services/updateService";
 import { Toaster } from "sonner";
 import type { Settings } from "./types/settings";
 import "./index.css"
@@ -26,6 +27,8 @@ function App() {
       .catch(error => {
         console.error("Failed to load settings:", error);
       });
+
+    checkForUpdates();
 
     // Listen for tray events
     const unlistenGeneralSettings = listen("open-general-settings", () => {
@@ -59,6 +62,9 @@ function App() {
       unlistenShortcut.then(fn => fn());
       unlistenClose.then(fn => fn());
     };
+    // Runs once on mount to register tray/shortcut listeners for the app's lifetime;
+    // startScreenshot is intentionally excluded to avoid re-registering them on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function startScreenshot() {
@@ -155,7 +161,7 @@ function App() {
       const timestamp = Date.now();
       const prefix = settings.filename_prefix ? `${settings.filename_prefix}_` : '';
       const filename = `${prefix}screenshot_${timestamp}.png`;
-      const savePath = `/tmp/${filename}`;
+      const savePath = `${settings.save_directory}/${filename}`;
 
       await invoke("save_base64_image", {
         base64Data,
