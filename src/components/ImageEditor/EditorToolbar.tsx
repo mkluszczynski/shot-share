@@ -58,6 +58,7 @@ export function EditorToolbar({
                         disabled={!canUndo}
                         className="p-2 rounded-lg hover:bg-secondary/50 disabled:opacity-30 disabled:hover:bg-transparent transition-all group cursor-pointer"
                         title="Undo (Ctrl+Z)"
+                        aria-label="Undo"
                     >
                         <Undo2 className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </button>
@@ -66,6 +67,7 @@ export function EditorToolbar({
                         disabled={!canRedo}
                         className="p-2 rounded-lg hover:bg-secondary/50 disabled:opacity-30 disabled:hover:bg-transparent transition-all group cursor-pointer"
                         title="Redo (Ctrl+Y)"
+                        aria-label="Redo"
                     >
                         <Redo2 className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </button>
@@ -89,6 +91,8 @@ export function EditorToolbar({
                                     }
                                 `}
                                 title={`${t.label} (${t.shortcut})`}
+                                aria-label={t.label}
+                                aria-pressed={isActive}
                             >
                                 {isActive && (
                                     <div className="absolute inset-0 bg-linear-to-r from-primary to-primary/80 rounded-lg animate-glow" />
@@ -108,6 +112,7 @@ export function EditorToolbar({
                             onChange={(e) => onColorChange(e.target.value)}
                             className="w-8 h-8 rounded-lg cursor-pointer border-2 border-border/50 hover:border-primary/50 transition-all"
                             title="Color"
+                            aria-label="Shape color"
                         />
                         <div
                             className="absolute inset-0 rounded-lg pointer-events-none ring-2 ring-transparent group-hover:ring-primary/30 transition-all"

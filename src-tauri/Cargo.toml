@@ -33,4 +33,7 @@ keyring = "3"
 ssh2 = "0.9"
 thiserror = "2"
 openssl = { version = "0.10", features = ["vendored"] }
+tauri-plugin-single-instance = "2.4.3"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"
 

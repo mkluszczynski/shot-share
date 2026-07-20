@@ -69,37 +69,20 @@ impl Default for Settings {
 impl Settings {
     /// Get the keyring entry for SFTP password
     fn get_keyring_entry() -> Result<Entry, String> {
-        println!(
-            "Getting keyring entry: service='{}', username='{}'",
-            KEYRING_SERVICE, KEYRING_USERNAME
-        );
         Entry::new(KEYRING_SERVICE, KEYRING_USERNAME)
             .map_err(|e| format!("Failed to access keyring: {}", e))
     }
 
     /// Save SFTP password to OS keyring
     fn save_password_to_keyring(password: &str) -> Result<(), String> {
-        println!(
-            "[save_password_to_keyring] Starting password save (length: {})",
-            password.len()
-        );
         let entry = Self::get_keyring_entry()?;
         entry
             .set_password(password)
             .map_err(|e| format!("Failed to save password to keyring: {}", e))?;
-        println!("[save_password_to_keyring] Password saved successfully");
 
         // Immediately verify it was saved
-        match entry.get_password() {
-            Ok(retrieved) => {
-                println!(
-                    "[save_password_to_keyring] Verification: password retrieved (length: {})",
-                    retrieved.len()
-                );
-            }
-            Err(e) => {
-                eprintln!("[save_password_to_keyring] Verification failed: {:?}", e);
-            }
+        if let Err(e) = entry.get_password() {
+            eprintln!("[save_password_to_keyring] Verification failed: {:?}", e);
         }
 
         Ok(())
@@ -154,7 +137,6 @@ impl Settings {
         let save_path = PathBuf::from(&self.save_directory);
 
         if !save_path.exists() {
-            println!("Creating save directory: {}", self.save_directory);
             fs::create_dir_all(&save_path).map_err(|e| {
                 format!(
                     "Failed to create save directory '{}': {}",
@@ -180,13 +162,8 @@ impl Settings {
 
         // Save password to keyring (only if not empty)
         if !self.sftp.password.is_empty() {
-            println!(
-                "Saving password to keyring (length: {})",
-                self.sftp.password.len()
-            );
             Self::save_password_to_keyring(&self.sftp.password)?;
         } else {
-            println!("Password is empty, deleting from keyring");
             // If password is empty, delete it from keyring
             let _ = Self::delete_password_from_keyring(); // Ignore errors if no password exists
         }
@@ -198,5 +175,47 @@ impl Settings {
             .map_err(|e| format!("Failed to write settings file: {}", e))?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // These only exercise (de)serialization, not `load`/`save`, since those
+    // touch the real filesystem and OS keyring which aren't available in CI.
+
+    #[test]
+    fn default_settings_round_trip_through_json() {
+        let settings = Settings::default();
+        let json = serde_json::to_string(&settings).expect("serialize");
+        let parsed: Settings = serde_json::from_str(&json).expect("deserialize");
+
+        assert_eq!(parsed.save_directory, settings.save_directory);
+        assert_eq!(parsed.screenshot_shortcut, settings.screenshot_shortcut);
+        assert_eq!(parsed.sftp.port, settings.sftp.port);
+    }
+
+    #[test]
+    fn missing_optional_fields_fall_back_to_defaults() {
+        // Simulates loading a settings.json written by an older version of
+        // the app, before filename_prefix/base_url/copy_to_clipboard existed.
+        let legacy_json = r#"{
+            "save_directory": "/home/user/Pictures/Screenshots",
+            "screenshot_shortcut": "CommandOrControl+Shift+S",
+            "sftp": {
+                "host": "example.com",
+                "port": 22,
+                "username": "user",
+                "remote_path": "/uploads"
+            }
+        }"#;
+
+        let settings: Settings = serde_json::from_str(legacy_json).expect("deserialize");
+
+        assert_eq!(settings.filename_prefix, "");
+        assert_eq!(settings.sftp.base_url, "https://example.com");
+        assert!(settings.sftp.copy_to_clipboard);
+        assert_eq!(settings.sftp.password, "");
     }
 }

@@ -19,12 +19,13 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' data: asset: https://asset.localhost; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost https://github.com https://objects.githubusercontent.com"
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/developer-art/32x32.png",
       "icons/developer-art/128x128.png",
@@ -32,5 +33,13 @@
       "icons/developer-art/icon.icns",
       "icons/developer-art/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDBFRTczRDAwQzYwNjdDNDgKUldSSWZBYkdBRDNuRG5icnVUeGo3Y2lSVmpiSHpzTk85Mko2TU9ZOWp4bk00QjZqZ3orajRsQTkK",
+      "endpoints": [
+        "https://github.com/mkluszczynski/shot-share/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

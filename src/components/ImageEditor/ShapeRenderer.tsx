@@ -32,82 +32,28 @@ function BlurRect({ shape, draggable, stageRef, isSelected, onClick, onDragEnd, 
     const groupRef = useRef<Konva.Group>(null);
     const [blurredImage, setBlurredImage] = React.useState<HTMLImageElement | null>(null);
 
+    // Debounce so rapid successive geometry changes (e.g. resize handles firing
+    // several updates in quick succession) coalesce into a single recompute of
+    // the pixelation, instead of re-running the pixel-loop for each one.
     useEffect(() => {
-        if (!stageRef.current) return;
+        const timer = setTimeout(() => {
+            if (!stageRef.current) return;
 
-        const stage = stageRef.current;
+            const stage = stageRef.current;
 
-        // Get the absolute position and dimensions
-        const x = Math.min(shape.x, shape.x + shape.width);
-        const y = Math.min(shape.y, shape.y + shape.height);
-        const width = Math.abs(shape.width);
-        const height = Math.abs(shape.height);
+            // Get the absolute position and dimensions
+            const x = Math.min(shape.x, shape.x + shape.width);
+            const y = Math.min(shape.y, shape.y + shape.height);
+            const width = Math.abs(shape.width);
+            const height = Math.abs(shape.height);
 
-        if (width === 0 || height === 0) return;
+            if (width === 0 || height === 0) return;
 
-        // Create a temporary canvas to capture and pixelate the region
-        const canvas = document.createElement('canvas');
-        const pixelSize = 10; // Size of pixelation blocks
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
+            pixelateRegion(stage, x, y, width, height, setBlurredImage);
+        }, 80);
 
-        if (!ctx) return;
-
-        // Convert the stage to a data URL and load it
-        const dataURL = stage.toDataURL({ x, y, width, height, pixelRatio: 1 });
-        const stageImage = new window.Image();
-
-        stageImage.onload = () => {
-            // Draw the captured region
-            ctx.drawImage(stageImage, 0, 0, width, height);
-
-            // Apply pixelation effect
-            const imageData = ctx.getImageData(0, 0, width, height);
-            const pixelatedData = ctx.createImageData(width, height);
-
-            for (let py = 0; py < height; py += pixelSize) {
-                for (let px = 0; px < width; px += pixelSize) {
-                    // Get average color of the block
-                    let r = 0, g = 0, b = 0, count = 0;
-                    for (let dy = 0; dy < pixelSize && py + dy < height; dy++) {
-                        for (let dx = 0; dx < pixelSize && px + dx < width; dx++) {
-                            const idx = ((py + dy) * width + (px + dx)) * 4;
-                            r += imageData.data[idx];
-                            g += imageData.data[idx + 1];
-                            b += imageData.data[idx + 2];
-                            count++;
-                        }
-                    }
-                    r = Math.floor(r / count);
-                    g = Math.floor(g / count);
-                    b = Math.floor(b / count);
-
-                    // Fill the block with average color
-                    for (let dy = 0; dy < pixelSize && py + dy < height; dy++) {
-                        for (let dx = 0; dx < pixelSize && px + dx < width; dx++) {
-                            const idx = ((py + dy) * width + (px + dx)) * 4;
-                            pixelatedData.data[idx] = r;
-                            pixelatedData.data[idx + 1] = g;
-                            pixelatedData.data[idx + 2] = b;
-                            pixelatedData.data[idx + 3] = 255;
-                        }
-                    }
-                }
-            }
-
-            ctx.putImageData(pixelatedData, 0, 0);
-
-            // Create image from canvas and set it
-            const pixelatedImage = new window.Image();
-            pixelatedImage.onload = () => {
-                setBlurredImage(pixelatedImage);
-            };
-            pixelatedImage.src = canvas.toDataURL();
-        };
-
-        stageImage.src = dataURL;
-    }, [shape, stageRef]);
+        return () => clearTimeout(timer);
+    }, [shape.x, shape.y, shape.width, shape.height, stageRef]);
 
     if (!blurredImage) {
         return null;
@@ -143,6 +89,78 @@ function BlurRect({ shape, draggable, stageRef, isSelected, onClick, onDragEnd, 
             )}
         </Group>
     );
+}
+
+function pixelateRegion(
+    stage: Konva.Stage,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    onDone: (image: HTMLImageElement) => void,
+) {
+    // Create a temporary canvas to capture and pixelate the region
+    const canvas = document.createElement("canvas");
+    const pixelSize = 10; // Size of pixelation blocks
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    // Convert the stage to a data URL and load it
+    const dataURL = stage.toDataURL({ x, y, width, height, pixelRatio: 1 });
+    const stageImage = new window.Image();
+
+    stageImage.onload = () => {
+        // Draw the captured region
+        ctx.drawImage(stageImage, 0, 0, width, height);
+
+        // Apply pixelation effect
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const pixelatedData = ctx.createImageData(width, height);
+
+        for (let py = 0; py < height; py += pixelSize) {
+            for (let px = 0; px < width; px += pixelSize) {
+                // Get average color of the block
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let dy = 0; dy < pixelSize && py + dy < height; dy++) {
+                    for (let dx = 0; dx < pixelSize && px + dx < width; dx++) {
+                        const idx = ((py + dy) * width + (px + dx)) * 4;
+                        r += imageData.data[idx];
+                        g += imageData.data[idx + 1];
+                        b += imageData.data[idx + 2];
+                        count++;
+                    }
+                }
+                r = Math.floor(r / count);
+                g = Math.floor(g / count);
+                b = Math.floor(b / count);
+
+                // Fill the block with average color
+                for (let dy = 0; dy < pixelSize && py + dy < height; dy++) {
+                    for (let dx = 0; dx < pixelSize && px + dx < width; dx++) {
+                        const idx = ((py + dy) * width + (px + dx)) * 4;
+                        pixelatedData.data[idx] = r;
+                        pixelatedData.data[idx + 1] = g;
+                        pixelatedData.data[idx + 2] = b;
+                        pixelatedData.data[idx + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        ctx.putImageData(pixelatedData, 0, 0);
+
+        // Create image from canvas and set it
+        const pixelatedImage = new window.Image();
+        pixelatedImage.onload = () => {
+            onDone(pixelatedImage);
+        };
+        pixelatedImage.src = canvas.toDataURL();
+    };
+
+    stageImage.src = dataURL;
 }
 
 export function ShapeRenderer({
